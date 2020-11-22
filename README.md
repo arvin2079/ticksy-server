@@ -33,6 +33,10 @@
 
 - **Admin panel**:
     - http://localhost:8000/admin/ 
-
+- **API Documentation**: (pick one)
+    - http://localhost:8000/swagger/
+    - http://localhost:8000/redoc/
+    - http://localhost:8000/swagger.json
+    - http://localhost:8000/swagger.yaml
 
 ## Done!
