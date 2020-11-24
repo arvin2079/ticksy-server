@@ -34,8 +34,28 @@ class User(PermissionsMixin, AbstractBaseUser):
     last_login = models.DateTimeField(_('last login'), auto_now_add=True)
     avatar = models.ImageField(_('avatar'), upload_to='avatars/', blank=True, null=True)
     code = models.IntegerField(_('code'), blank=True, null=True)
-    # role = models.ForeignKey(verbose_name=_('role'))
 
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
+
+
+ANONYMOUS  = 0
+REQUESTED  = 1
+IDENTIFIED = 2
+STATUS = (
+    (ANONYMOUS, "تایید نشده"),
+    (REQUESTED, "درخواست تایید"),
+    (IDENTIFIED, "تایید شده"),
+)
+
+class Identity(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+    )
+    ## TODO : check that request_time should be read only, expire time can be editable
+    identifier_image = models.ImageField(_('identifier image'), upload_to='Identifiers/', blank=True, null=True)
+    request_time = models.DateTimeField(_('request time'), auto_now_add=True)
+    expire_time = models.DateTimeField(_('expire time'))
+    status = models.CharField(choices=STATUS, verbose_name='وضعیت کابری', max_length=1)
