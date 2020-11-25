@@ -39,6 +39,9 @@ class User(PermissionsMixin, AbstractBaseUser):
 
     USERNAME_FIELD = 'email'
 
+    class Meta:
+        pass
+
 
 ANONYMOUS  = '0'
 REQUESTED  = '1'

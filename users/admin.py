@@ -20,8 +20,8 @@ class UserAdmin(BaseUserAdmin):
 
 class IdentityAdmin(admin.ModelAdmin):
     ordering = ['id']
+    readonly_fields = ('request_time',)
     list_display = ('request_time', 'expire_time', 'status')
-    list_filter = ('user',)
 
 
 admin.site.register(User, UserAdmin)
