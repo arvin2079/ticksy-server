@@ -51,7 +51,6 @@ INSTALLED_APPS = [
     # Project
     'users',
     'ticketing',
-
 ]
 
 AUTH_USER_MODEL = 'users.User'

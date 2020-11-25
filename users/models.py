@@ -40,11 +40,15 @@ class User(PermissionsMixin, AbstractBaseUser):
     USERNAME_FIELD = 'email'
 
     class Meta:
-        pass
+        ordering = ['date_joined']
+
+    def __str__(self):
+        return self.first_name + " " + self.last_name
 
 
-ANONYMOUS  = '0'
-REQUESTED  = '1'
+
+ANONYMOUS = '0'
+REQUESTED = '1'
 IDENTIFIED = '2'
 STATUS = (
     (ANONYMOUS, "تایید نشده"),
@@ -56,9 +60,16 @@ class Identity(models.Model):
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
+        unique=True
     )
     ## TODO : check that request_time should be read only, expire time can be editable
     identifier_image = models.ImageField(_('identifier image'), upload_to='Identifiers/', blank=True, null=True)
     request_time = models.DateTimeField(_('request time'), auto_now_add=True)
     expire_time = models.DateTimeField(_('expire time'))
     status = models.CharField(choices=STATUS, verbose_name='وضعیت کابری', max_length=1)
+
+    class Meta:
+        ordering = ['request_time']
+
+    def __str__(self):
+        return self.user.email + " : " + self.status
