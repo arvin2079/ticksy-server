@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.translation import gettext as _
 
-from .models import User
+from .models import User, Identity
 
 
 class UserAdmin(BaseUserAdmin):
@@ -18,4 +18,11 @@ class UserAdmin(BaseUserAdmin):
     )
 
 
+class IdentityAdmin(admin.ModelAdmin):
+    ordering = ['id']
+    list_display = ('request_time', 'expire_time', 'status')
+    list_filter = ('user',)
+
+
 admin.site.register(User, UserAdmin)
+admin.site.register(Identity, IdentityAdmin)

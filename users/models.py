@@ -24,9 +24,9 @@ class UserManager(BaseUserManager):
 ## TODO : ask if i should add "auto_now_add=True" to "last_login" ???
 
 class User(PermissionsMixin, AbstractBaseUser):
+    email = models.EmailField(unique=True, max_length=255)
     first_name = models.CharField(_('first name'), max_length=30, blank=True)
     last_name = models.CharField(_('last name'), max_length=30, blank=True)
-    email = models.EmailField(unique=True, max_length=255)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=True)
     is_superuser = models.BooleanField(default=False)
@@ -40,9 +40,9 @@ class User(PermissionsMixin, AbstractBaseUser):
     USERNAME_FIELD = 'email'
 
 
-ANONYMOUS  = 0
-REQUESTED  = 1
-IDENTIFIED = 2
+ANONYMOUS  = '0'
+REQUESTED  = '1'
+IDENTIFIED = '2'
 STATUS = (
     (ANONYMOUS, "تایید نشده"),
     (REQUESTED, "درخواست تایید"),
