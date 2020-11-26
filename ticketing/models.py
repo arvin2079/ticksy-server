@@ -5,9 +5,9 @@ from users.models import User
 class Topic(models.Model):
     creator     = models.ForeignKey(User, related_name='created_topics' , on_delete=models.CASCADE, verbose_name='سازنده')
     title       = models.CharField(max_length=100, blank=True, null=False, verbose_name='موضوع')
-    description = models.CharField(max_length=500, blank=True, null=False, verbose_name='توضیحات')
-    supporters  = models.ManyToManyField(User, related_name='supported_topics', verbose_name='حمایت کنندگان')
+    description = models.CharField(max_length=500, blank=True, null=False, verbose_name='توضیحات')    
     slug        = models.SlugField(max_length=50, unique=True, blank=False, null=False, verbose_name='تگ آدرس')
+    supporters  = models.ManyToManyField(User, blank=True, related_name='supported_topics', verbose_name='حمایت کنندگان')
 
     def __str__(self):
         return self.title
@@ -39,9 +39,9 @@ class Ticket(models.Model):
     creator         = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='آی دی سازنده تیکت')
     title           = models.CharField(max_length=100, blank=True, null=False, verbose_name='موضوع')
     creation_date   = models.DateTimeField(auto_now_add=True, auto_now=False, blank=True, null=False, verbose_name='زمان ایجاد')
-    status          = models.CharField(max_length=1, choices=STATUS_CHOICES, default=WAITING_FOR_ANSWER, blank=False, null=False, verbose_name='وضعیت')
-    last_update     = models.DateTimeField(auto_now=True, blank=True, null=False, verbose_name='آخرین زمان تغییرات')
-    priority        = models.CharField(max_length=1, choices=PRIORITY_CHOICES, blank=False, null=False, verbose_name='اولویت')
+    status          = models.IntegerField(choices=STATUS_CHOICES, default=WAITING_FOR_ANSWER, blank=False, null=False, verbose_name='وضعیت')
+    last_update     = models.DateTimeField(auto_now=True, blank=True, null=False, verbose_name='زمان آخرین تغییرات')
+    priority        = models.IntegerField(choices=PRIORITY_CHOICES, blank=False, null=False, verbose_name='اولویت')
     topic           = models.ForeignKey(Topic, on_delete=models.CASCADE, verbose_name='اطلاعات تیکت')
 
     def __str__(self):
@@ -53,9 +53,9 @@ class Ticket(models.Model):
 class Message(models.Model):
     user    = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='سازنده')
     ticket  = models.ForeignKey(Ticket, on_delete=models.CASCADE, verbose_name='اطلاعات تیکت')
-    text    = models.TextField(blank=True, null=False, verbose_name='متن تیکت')
+    rate    = models.FloatField(blank=False, null=False, default=1, verbose_name='امتیاز')
     date    = models.DateTimeField(auto_now=False, auto_now_add=True, null=False, blank=True, verbose_name='زمان ایجاد')
-    rate    = models.SmallIntegerField(blank=False, null=False, default=1, verbose_name='امتیاز')
+    text    = models.TextField(blank=True, null=False, verbose_name='متن تیکت')
 
     def __str__(self):
         return self.text

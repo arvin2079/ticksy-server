@@ -18,10 +18,7 @@ class Identity(models.Model):
     identifier_image    = models.ImageField(upload_to='pics/', blank=True, null=True, verbose_name='عکس پرسنلی')
     request_time        = models.DateTimeField(auto_now=False, auto_now_add=True, blank=True, verbose_name='زمان درخواست')
     expire_time         = models.DateTimeField(auto_now=False, auto_now_add=False, blank=True, null=True, verbose_name='زمان ابطال')
-    status              = models.CharField(max_length=1, choices=STATUS_CHOICES, default=REQUESTED, blank=True, verbose_name='وضعیت')
-
-    def __str__(self):
-        return self.user
+    status              = models.IntegerField(choices=STATUS_CHOICES, default=REQUESTED, blank=True, verbose_name='وضعیت')
 
     class meta:
         ordering=['user']
