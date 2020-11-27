@@ -8,7 +8,6 @@ from .serializer import UserSerializer, SignupSerializer
 
 class UserInfoApiView(generics.RetrieveAPIView):
     serializer_class = UserSerializer
-    authentication_classes = [authentication.TokenAuthentication,]
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_object(self):
@@ -32,7 +31,6 @@ class LoginApiView(ObtainAuthToken):
 
 class SignupApiView(generics.CreateAPIView):
     serializer_class = SignupSerializer
-    authentication_classes = [authentication.TokenAuthentication, ]
     permissions = (permissions.IsAuthenticated, )
 
     def post(self, request, *args, **kwargs):

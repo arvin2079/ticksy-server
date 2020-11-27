@@ -12,8 +12,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class SignupSerializer(serializers.Serializer):
-    username = serializers.EmailField(
-        label=_('username'),
+    email = serializers.EmailField(
+        label=_('email'),
     )
     password = serializers.CharField(
         label=_("Password"),
@@ -24,33 +24,30 @@ class SignupSerializer(serializers.Serializer):
     first_name = serializers.CharField(label=_('firstname'))
     last_name = serializers.CharField(label=_('lastname'))
 
-    # code = serializers.CharField(label=_('code'))
-    # identifier_image = serializers.ImageField(_('identifier'))
-
     def create(self, validated_data):
         """ Create and return a new `user` instance, given the validated data. """
-        return User.objects.create_user(email=validated_data.pop('username'),
+        return User.objects.create_user(email=validated_data.pop('email'),
                                         password=validated_data.pop('password'), **validated_data)
 
-    # def update(self, instance, validated_data):
-    #     """ Update and return an existing `user` instance, given the validated data. """
-    #     instance.username = validated_data.get('username')
-    #     instance.first_name = validated_data.get('first_name')
-    #     instance.last_name = validated_data.get('last_name')
-    #     instance.code = validated_data.get('code')
-    #     instance.identifier_image = validated_data.get('identifier_image')
-    #     instance.save()
-    #     return instance
+    def update(self, instance, validated_data):
+        """ Update and return an existing `user` instance, given the validated data. """
+        instance.email = validated_data.get('email')
+        instance.first_name = validated_data.get('first_name')
+        instance.last_name = validated_data.get('last_name')
+        instance.code = validated_data.get('code')
+        instance.identifier_image = validated_data.get('identifier_image')
+        instance.save()
+        return instance
 
     def validate(self, attrs):
-        if User.objects.filter(email=attrs.get('username')):
+        if User.objects.filter(email=attrs.get('email')):
             raise serializers.ValidationError("email address has been taken befor")
         return attrs
 
-    def validate_username(self, email):
+    def validate_email(self, email):
         if custom_validator.validate_email(email):
             return email
-        raise serializers.ValidationError('not valid username')
+        raise serializers.ValidationError('not valid email')
 
     def validate_password(self, password):
         if custom_validator.validate_password(password):
