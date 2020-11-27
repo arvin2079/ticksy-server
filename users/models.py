@@ -31,7 +31,6 @@ class User(PermissionsMixin, AbstractBaseUser):
     is_staff = models.BooleanField(default=True)
     is_superuser = models.BooleanField(default=False)
     date_joined = models.DateTimeField(_('date joined'), auto_now_add=True)
-    last_login = models.DateTimeField(_('last login'), auto_now_add=True)
     avatar = models.ImageField(_('avatar'), upload_to='avatars/', blank=True, null=True)
     code = models.IntegerField(_('code'), blank=True, null=True)
 
