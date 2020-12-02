@@ -1,7 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-import users.validators as custom_validator
+import users.validators as validator
 from ..models import *
 
 
@@ -45,31 +45,31 @@ class SignupSerializer(serializers.Serializer):
         return attrs
 
     def validate_email(self, email):
-        if custom_validator.validate_email(email):
+        if validator.validate_email(email):
             return email
         raise serializers.ValidationError('not valid email')
 
     def validate_password(self, password):
-        if custom_validator.validate_password(password):
+        if validator.validate_password(password):
             return password
         raise serializers.ValidationError('not valid password')
 
     def validate_first_name(self, firstname):
-        if custom_validator.validate_firstname(firstname):
+        if validator.validate_firstname(firstname):
             return firstname
         raise serializers.ValidationError('not valid firstname')
 
     def validate_last_name(self, lastname):
-        if custom_validator.validate_lastname(lastname):
+        if validator.validate_lastname(lastname):
             return lastname
         raise serializers.ValidationError('not valid lastname')
 
     def validate_code(self, code):
-        if custom_validator.validate_identifier_code(code):
+        if validator.validate_identifier_code(code):
             return code
         raise serializers.ValidationError('not valid identifier code')
 
     def validate_identifier_image(self, image):
-        if custom_validator.validate_identifier_image(image):
+        if validator.validate_identifier_image(image):
             return image
         raise serializers.ValidationError('not valid identifier image')
