@@ -7,12 +7,6 @@ def validate_email(value):
     return False
 
 
-def validate_password(value):
-    if not value:
-        return False
-    return True
-
-
 def validate_identifier_code(value):
     return True
 

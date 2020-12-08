@@ -186,3 +186,10 @@ MEDIA_ROOT = BASE_DIR / 'media'  # change it in deployment to public_html dir
 MEDIA_URL = '/media/'
 
 # checklist for production : STATIC_ROOT, MEDIA_ROOT, DEBUG, ALLOWED_HOSTS, Database
+
+EMAIL_HOST = 'mail.margay.ir'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'no-reply-khu@margay.ir'
+EMAIL_HOST_PASSWORD = 'fuw9MUM7rir!lunk'
+EMAIL_USE_TLS = False
+# EMAIL_USE_SSL = True

@@ -1,5 +1,12 @@
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core.mail import send_mail
+from django.utils.encoding import smart_bytes, smart_str, DjangoUnicodeDecodeError
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
+
 from rest_framework import serializers
+from rest_framework.reverse import reverse
+from rest_framework.exceptions import AuthenticationFailed
 
 import users.validators as validator
 from ..models import *
@@ -17,6 +24,7 @@ class SignupSerializer(serializers.Serializer):
     )
     password = serializers.CharField(
         label=_("Password"),
+        min_length=6,
         style={'input_type': 'password'},
         trim_whitespace=False,
         write_only=True
@@ -49,11 +57,6 @@ class SignupSerializer(serializers.Serializer):
             return email
         raise serializers.ValidationError('not valid email')
 
-    def validate_password(self, password):
-        if validator.validate_password(password):
-            return password
-        raise serializers.ValidationError('not valid password')
-
     def validate_first_name(self, firstname):
         if validator.validate_firstname(firstname):
             return firstname
@@ -73,3 +76,84 @@ class SignupSerializer(serializers.Serializer):
         if validator.validate_identifier_image(image):
             return image
         raise serializers.ValidationError('not valid identifier image')
+
+
+class ResetPasswordRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(
+        label=_('email'),
+        write_only=True,
+        required=True,
+    )
+
+    def save(self, **kwargs):
+        request = self.context['request']
+        email = self.validated_data['email']
+        user = User.objects.get(email=email)
+
+        uib64 = urlsafe_base64_encode(smart_bytes(user.id))
+        token = PasswordResetTokenGenerator().make_token(user)
+
+        relative_link = reverse('users:reset_password_confirm_credential',
+                                request=request, kwargs={'uib64': uib64, 'token': token})
+
+        email_title = 'change password link for TickSy'
+        email_body = 'hello\nuse this link below to reset your password\n{link}'.format(link=relative_link)
+
+        send_mail(
+            email_title,  ## title
+            email_body,  ## body
+            'no-reply-khu@margay.ir',  ## from
+            [email, ],  ## to
+        )
+
+    def validate(self, attrs):
+        if validator.validate_email(attrs['email']) and \
+                User.objects.filter(email=attrs['email']).exists():
+            return attrs
+        raise serializers.ValidationError('not valid email')
+
+
+class ResetPasswordNewPasswordSerializer(serializers.Serializer):
+    password = serializers.CharField(
+        label=_('password'),
+        required=True,
+        min_length=6,
+        write_only=True,
+        style={'input_type': 'password'},
+        trim_whitespace=False,
+    )
+    uib64 = serializers.CharField(
+        label='id',
+        required=True,
+        min_length=1,
+        write_only=True,
+    )
+    token = serializers.CharField(
+        label='token',
+        required=True,
+        min_length=1,
+        write_only=True,
+    )
+
+    def validate(self, attrs):
+        try:
+            print(attrs['password'])
+            password = attrs.get('password')
+            token = attrs.get('token')
+            uib64 = attrs.get('uib64')
+
+            user_id = smart_str(urlsafe_base64_decode(uib64))
+            user = User.objects.get(id=user_id)
+            if not PasswordResetTokenGenerator().check_token(user, token):
+                raise AuthenticationFailed('لینک تغییر رمز نامعتبر', 401)
+
+            user.set_password(password)
+            user.save()
+
+            return attrs
+        except User.DoesNotExist:
+            raise serializers.ValidationError('کاربر با این مشخصات موجود نیست')
+        except DjangoUnicodeDecodeError:
+            raise serializers.ValidationError('decoding process failed')
+        except:
+            raise serializers.ValidationError('error')
