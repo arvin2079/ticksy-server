@@ -1,7 +1,7 @@
 from django.urls import path
-from .views import TopicList
+from .views import TopicListCreateAPIView
 
 
 urlpatterns = [
-    path('topics/', TopicList.as_view())
+    path('topics/', TopicListCreateAPIView.as_view(), name='topic-list-create')
 ]
