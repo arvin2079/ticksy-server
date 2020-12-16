@@ -24,12 +24,12 @@ def validate_lastname(value):
 
 
 def is_persian(value):
-    if re.match(r'[۱۲۳۴۵۶۷۸۹۰آابپتثجچحخدذرزژسشصضطظعغفقکگلمنوهی]+', value):
+    if re.match(r'[۱۲۳۴۵۶۷۸۹۰ آابپتثجچحخدذرزژسشصضطظعغفقکگلمنوهی]+', value):
         return True
     return False
 
 
 def is_english(value):
-    if re.match(r'^[a-zA-Z]+$', value):
+    if re.match(r'^[a-zA-Z ]+$', value):
         return True
     return False

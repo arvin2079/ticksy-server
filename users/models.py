@@ -21,9 +21,10 @@ class UserManager(BaseUserManager):
         return user
 
 
-## TODO : ask if i should add "auto_now_add=True" to "last_login" ???
+## TODO : ask if i should add "auto_now_add=True" to "last_login" ???   No :))
 
 class User(PermissionsMixin, AbstractBaseUser):
+    # todo: 1-add validators to fields and appropriate verbose_name. 2-add as much as you can fields and methods of AbstractUser (why didn't just override AbstractUser?).
     email = models.EmailField(unique=True, max_length=255)
     first_name = models.CharField(_('first name'), max_length=30, blank=True)
     last_name = models.CharField(_('last name'), max_length=30, blank=True)
@@ -46,29 +47,29 @@ class User(PermissionsMixin, AbstractBaseUser):
 
 
 
-ANONYMOUS = '0'
-REQUESTED = '1'
-IDENTIFIED = '2'
-STATUS = (
-    (ANONYMOUS, "تایید نشده"),
-    (REQUESTED, "درخواست تایید"),
-    (IDENTIFIED, "تایید شده"),
-)
-
-class Identity(models.Model):
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        unique=True
-    )
-    ## TODO : check that request_time should be read only, expire time can be editable
-    identifier_image = models.ImageField(_('identifier image'), upload_to='Identifiers/', blank=True, null=True)
-    request_time = models.DateTimeField(_('request time'), auto_now_add=True)
-    expire_time = models.DateTimeField(_('expire time'))
-    status = models.CharField(choices=STATUS, verbose_name='وضعیت کابری', max_length=1)
-
-    class Meta:
-        ordering = ['request_time']
-
-    def __str__(self):
-        return self.user.email + " : " + self.status
+# ANONYMOUS = '0'
+# REQUESTED = '1'
+# IDENTIFIED = '2'
+# STATUS = (
+#     (ANONYMOUS, "تایید نشده"),
+#     (REQUESTED, "درخواست تایید"),
+#     (IDENTIFIED, "تایید شده"),
+# )
+#
+# class Identity(models.Model):
+#     user = models.OneToOneField(
+#         User,
+#         on_delete=models.CASCADE,
+#         unique=True
+#     )
+#     ## TODO : check that request_time should be read only, expire time can be editable
+#     identifier_image = models.ImageField(_('identifier image'), upload_to='Identifiers/', blank=True, null=True)
+#     request_time = models.DateTimeField(_('request time'), auto_now_add=True)
+#     expire_time = models.DateTimeField(_('expire time'))
+#     status = models.CharField(choices=STATUS, verbose_name='وضعیت کابری', max_length=1)
+#
+#     class Meta:
+#         ordering = ['request_time']
+#
+#     def __str__(self):
+#         return self.user.email + " : " + self.status

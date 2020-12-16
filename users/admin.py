@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.translation import gettext as _
 
-from .models import User, Identity
+from .models import User
 
 
 class UserAdmin(BaseUserAdmin):
@@ -18,11 +18,11 @@ class UserAdmin(BaseUserAdmin):
     )
 
 
-class IdentityAdmin(admin.ModelAdmin):
-    ordering = ['id']
-    readonly_fields = ('request_time',)
-    list_display = ('request_time', 'expire_time', 'status')
+# class IdentityAdmin(admin.ModelAdmin):
+#     ordering = ['id']
+#     readonly_fields = ('request_time',)
+#     list_display = ('request_time', 'expire_time', 'status')
 
 
 admin.site.register(User, UserAdmin)
-admin.site.register(Identity, IdentityAdmin)
+# admin.site.register(Identity, IdentityAdmin)

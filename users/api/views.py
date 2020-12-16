@@ -22,7 +22,7 @@ class UserInfoApiView(generics.RetrieveAPIView):
 
 
 class LoginApiView(ObtainAuthToken):
-    authentication_classes = []
+    authentication_classes = [permissions.AllowAny]  # just for intention be more explicit
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data, context={'request': request})
