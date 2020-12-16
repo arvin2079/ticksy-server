@@ -46,30 +46,23 @@ class User(PermissionsMixin, AbstractBaseUser):
         return self.first_name + " " + self.last_name
 
 
+REQUESTED   = '1'
+IDENTIFIED  = '2'
+UNIDENTIFIED= '3'
+STATUS_CHOICES = (
+    (IDENTIFIED, 'احراز شده'),
+    (REQUESTED, 'درخواست احراز'),
+    (UNIDENTIFIED, 'احراز نشده')
+)
 
-# ANONYMOUS = '0'
-# REQUESTED = '1'
-# IDENTIFIED = '2'
-# STATUS = (
-#     (ANONYMOUS, "تایید نشده"),
-#     (REQUESTED, "درخواست تایید"),
-#     (IDENTIFIED, "تایید شده"),
-# )
-#
-# class Identity(models.Model):
-#     user = models.OneToOneField(
-#         User,
-#         on_delete=models.CASCADE,
-#         unique=True
-#     )
-#     ## TODO : check that request_time should be read only, expire time can be editable
-#     identifier_image = models.ImageField(_('identifier image'), upload_to='Identifiers/', blank=True, null=True)
-#     request_time = models.DateTimeField(_('request time'), auto_now_add=True)
-#     expire_time = models.DateTimeField(_('expire time'))
-#     status = models.CharField(choices=STATUS, verbose_name='وضعیت کابری', max_length=1)
-#
-#     class Meta:
-#         ordering = ['request_time']
-#
-#     def __str__(self):
-#         return self.user.email + " : " + self.status
+class Identity(models.Model):  # todo: should auto created with user.
+    user                = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='کاربر')
+    identifier_image    = models.ImageField(upload_to='pics/', blank=True, null=True, verbose_name='عکس پرسنلی')
+    request_time        = models.DateTimeField(null=True, blank=True, verbose_name='زمان درخواست')
+    expire_time         = models.DateTimeField(blank=True, null=True, verbose_name='زمان ابطال')
+    status              = models.CharField(choices=STATUS_CHOICES, default=UNIDENTIFIED, verbose_name='وضعیت', max_length=1)
+
+    class Meta:
+        ordering=['-request_time']
+        verbose_name = 'احراز هویت'
+        verbose_name_plural = 'احراز هویت'
