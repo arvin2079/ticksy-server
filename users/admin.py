@@ -1,10 +1,8 @@
 from django.contrib import admin
-
-## TODO : ask when to use ugettext and when to use gettext (what is different)
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.translation import gettext as _
 
-from .models import User, Identity
+from .models import User
 
 
 class UserAdmin(BaseUserAdmin):
@@ -17,15 +15,14 @@ class UserAdmin(BaseUserAdmin):
         (_('important dates'), {'fields': ('date_joined', 'last_login')}),
     )
 
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email', 'password1', 'password2', 'first_name', 'last_name', 'avatar', 'code'),
+        }),
+    )
 
-class IdentityAdmin(admin.ModelAdmin):
-    list_display = ('user', 'status', 'request_time', 'expire_time')
-    list_filter  = ['status', 'request_time', 'expire_time']
-    search_fields = ['user']
-    # fieldsets     = [
-    #     (None, {'fields': ['user', 'identifier_image', 'status', 'expire_time']})
-    #     ]
+    # todo: add Identity Inline
 
 
 admin.site.register(User, UserAdmin)
-admin.site.register(Identity, IdentityAdmin)
