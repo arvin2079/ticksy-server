@@ -1,6 +1,4 @@
 from django.contrib import admin
-
-## TODO : ask when to use ugettext and when to use gettext (what is different)
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.translation import gettext as _
 
@@ -22,6 +20,7 @@ class IdentityAdmin(admin.ModelAdmin):
     list_display = ('user', 'status', 'request_time', 'expire_time')
     list_filter  = ['status', 'request_time', 'expire_time']
     search_fields = ['user']
+
     # fieldsets     = [
     #     (None, {'fields': ['user', 'identifier_image', 'status', 'expire_time']})
     #     ]
