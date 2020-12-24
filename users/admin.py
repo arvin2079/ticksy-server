@@ -15,6 +15,13 @@ class UserAdmin(BaseUserAdmin):
         (_('important dates'), {'fields': ('date_joined', 'last_login')}),
     )
 
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email', 'password1', 'password2', 'first_name', 'last_name', 'avatar', 'code'),
+        }),
+    )
+
 
 class IdentityAdmin(admin.ModelAdmin):
     list_display = ('user', 'status', 'request_time', 'expire_time')

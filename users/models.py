@@ -5,12 +5,17 @@ from django.utils.translation import ugettext_lazy as _
 
 class UserManager(BaseUserManager):
 
+    def create_user_identity(self, user):
+        identity = Identity(user=user)
+        identity.save()
+
     def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError('user must have email')
         user = self.model(email=self.normalize_email(email), **extra_fields)
         user.set_password(password)
         user.save()
+        self.create_user_identity(user)
         return user
 
     def create_superuser(self, email, password):
@@ -18,6 +23,7 @@ class UserManager(BaseUserManager):
         user.is_staff = True
         user.is_superuser = True
         user.save()
+        self.create_user_identity(user)
         return user
 
 
@@ -46,9 +52,9 @@ class User(PermissionsMixin, AbstractBaseUser):
         return self.first_name + " " + self.last_name
 
 
-REQUESTED   = '1'
-IDENTIFIED  = '2'
-UNIDENTIFIED= '3'
+REQUESTED    = '1'
+IDENTIFIED   = '2'
+UNIDENTIFIED = '3'
 STATUS_CHOICES = (
     (IDENTIFIED, 'احراز شده'),
     (REQUESTED, 'درخواست احراز'),
