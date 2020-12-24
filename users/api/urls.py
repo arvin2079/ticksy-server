@@ -4,8 +4,8 @@ from .views import *
 app_name = 'users'
 
 urlpatterns = [
-    path('info/', UserInfoApiView.as_view(), name='user_info'),
-    path('signin/', LoginApiView.as_view(), name='user_signin'),
+    path('profile/', UserInfoApiView.as_view(), name='user_info'),
+    path('signin/', SigninApiView.as_view(), name='user_signin'),
     path('signup/', SignupApiView.as_view(), name='user_signup'),
     path('reset_password/request/', ResetPasswordRequest.as_view(), name='reset_password_request'),
     path('reset_password/confirm-credential/<str:uib64>/<str:token>', ResetPasswordValidateToken.as_view(),

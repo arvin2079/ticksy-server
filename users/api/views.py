@@ -13,16 +13,16 @@ from .serializer import UserSerializer,\
     ResetPasswordNewPasswordSerializer
 
 
-class UserInfoApiView(generics.RetrieveAPIView):
+class UserInfoApiView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated, )
 
     def get_object(self):
         return self.request.user
 
 
-class LoginApiView(ObtainAuthToken):
-    authentication_classes = [permissions.AllowAny]  # just for intention be more explicit
+class SigninApiView(ObtainAuthToken):
+    permissions = [permissions.AllowAny]  # just for intention be more explicit
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data, context={'request': request})

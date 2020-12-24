@@ -44,7 +44,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     # REST FRAMEWORK API URLS
-    path('api/auth/', include('users.api.urls', 'auth-api')),
+    path('api/users/', include('users.api.urls', 'auth-api')),
 
     # include
     path('', include('ticketing.urls')),
