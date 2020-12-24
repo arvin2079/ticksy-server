@@ -6,11 +6,13 @@ from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.response import Response
 
-from ..models import User
+from ..models import User, Identity
+from ..permissions import IdentifyPermission
 from .serializer import UserSerializer,\
     SignupSerializer,\
     ResetPasswordRequestSerializer,\
-    ResetPasswordNewPasswordSerializer
+    ResetPasswordNewPasswordSerializer,\
+    UserIdentitySerializer
 
 
 class UserInfoApiView(generics.RetrieveUpdateAPIView):
@@ -84,3 +86,12 @@ class ResetPasswordNewPassword(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response({'detail': 'رمز عبور با موفقیت تغییر یافت'}, status=status.HTTP_200_OK)
+
+
+class IdentityApiView(generics.RetrieveUpdateAPIView):
+    serializer_class = UserIdentitySerializer
+    permission_classes = (permissions.IsAuthenticated, IdentifyPermission)
+
+    def get_object(self):
+        user = self.request.user
+        return Identity.objects.filter(user=user).first()

@@ -9,7 +9,7 @@ from rest_framework.reverse import reverse
 from rest_framework.exceptions import AuthenticationFailed
 
 import users.validators as validator
-from ..models import *
+from ..models import User, Identity
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -157,3 +157,10 @@ class ResetPasswordNewPasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError('decoding process failed')
         except:
             raise serializers.ValidationError('error')
+
+
+class UserIdentitySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Identity
+        fields = ['identifier_image', 'request_time', 'expire_time', 'status']
