@@ -1,7 +1,5 @@
 from rest_framework import serializers
 from ticketing.models import Topic
-from users.serializers import UserSerializer
-from users.models import User
 
 
 class TopicSerializer(serializers.ModelSerializer):
