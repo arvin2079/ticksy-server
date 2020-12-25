@@ -1,13 +1,35 @@
-from django.core.validators import validate_slug, MaxValueValidator, MinValueValidator, FileExtensionValidator
+from django.core.validators import validate_slug, MaxValueValidator, MinValueValidator, FileExtensionValidator, ValidationError
+from django.template.defaultfilters import filesizeformat
+from django.db.models.signals import pre_delete
+from django.dispatch.dispatcher import receiver
+from django.conf import settings
 from django.db import models
 from users.models import User
 
 
+ACTIVE   = '1'
+DEACTIVE = '2'
+DELETED  = '3'
+IS_ACTIVE_CHOICES = [
+    (ACTIVE, 'فعال'),
+    (DEACTIVE, 'غیر فعال'),
+    (DELETED, 'حذف شده')
+]
+
 class Topic(models.Model):
-    creator     = models.ForeignKey(User, related_name='created_topics', on_delete=models.PROTECT, verbose_name='سازنده')
+
+    def validate_image_size(image):
+        filesize = image.file.size
+        if filesize > int(settings.MAX_UPLOAD_IMAGE_SIZE):
+            raise ValidationError('حداکثر سایز عکس باید {} باشد'.format((filesizeformat(settings.MAX_UPLOAD_IMAGE_SIZE))))
+
+    VALID_AVATAR_EXTENSION = ['png', 'jpg', 'jpeg']
+    creator     = models.ForeignKey(User, related_name='created_topics', null=True, on_delete=models.PROTECT, verbose_name='سازنده')
     title       = models.CharField(max_length=100, verbose_name='عنوان')
     description = models.TextField(verbose_name='توضیحات', null=True, blank=True)
     slug        = models.SlugField(max_length=30, unique=True, verbose_name='تگ آدرس', validators=[validate_slug], help_text='نام اینگلیسی مناسب برای لینک (به جای فاصله از خط تیره استفاده کنید)')
+    is_active   = models.CharField(max_length=1, choices=IS_ACTIVE_CHOICES, default=ACTIVE, verbose_name='وضعیت')
+    avatar      = models.FileField(upload_to='topic-avatar/', null=True, blank=True, validators=[FileExtensionValidator(VALID_AVATAR_EXTENSION), validate_image_size], verbose_name='آواتار')
     supporters  = models.ManyToManyField(User, blank=True, related_name='supported_topics', verbose_name='پشتیبانان')
 
     def __str__(self):
@@ -17,6 +39,10 @@ class Topic(models.Model):
         ordering= ['title']
         verbose_name = 'بخش'
         verbose_name_plural = 'بخش ها'
+
+@receiver(pre_delete, sender=Topic)
+def topic_delete(sender, instance, **kwargs):
+    instance.avatar.delete(False)
 
     # todo: add a method to get links (for user and for supporters) of topic. [use 'reverse' from django rest, ask if google didn't answer]
 
@@ -45,9 +71,9 @@ PRIORITY_CHOICES = [
 class Ticket(models.Model):
     creator         = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name='سازنده')
     title           = models.CharField(max_length=100, verbose_name='عنوان')
-    creation_date   = models.DateTimeField(auto_now_add=True, verbose_name='زمان ایجاد')
+    creation_date   = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='زمان ایجاد')
     status          = models.CharField(choices=STATUS_CHOICES, default=WAITING_FOR_ANSWER, verbose_name='وضعیت', max_length=1)
-    last_update     = models.DateTimeField(auto_now=True, verbose_name='زمان آخرین تغییرات')
+    last_update     = models.DateTimeField(auto_now=True, blank=True, null=True, verbose_name='زمان آخرین تغییرات')
     priority        = models.CharField(choices=PRIORITY_CHOICES, verbose_name='اولویت', max_length=1)
     topic           = models.ForeignKey(Topic, on_delete=models.PROTECT, verbose_name='بخش مربوطه')
 
@@ -63,7 +89,7 @@ class Message(models.Model):
     user    = models.ForeignKey(User, on_delete=models.RESTRICT, verbose_name='فرستنده')
     ticket  = models.ForeignKey(Ticket, on_delete=models.CASCADE, verbose_name='تیکت مربوطه')
     rate    = models.PositiveIntegerField(blank=True, null=True, verbose_name='امتیاز', validators=[MaxValueValidator(5), MinValueValidator(1)])
-    date    = models.DateTimeField(auto_now_add=True, verbose_name='زمان ایجاد')
+    date    = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='زمان ایجاد')
     text    = models.TextField(verbose_name='متن تیکت')
 
     def __str__(self):
@@ -80,12 +106,22 @@ class Message(models.Model):
     get_short_text.short_description = 'متن پیام'
 
 class Attachment(models.Model):  # todo: if an Attachment object is deleted, the file of that object should delete too (u can write that code manually or download the appropriate package). [ask if u don't know how to do]
-    message = models.ForeignKey(Message, on_delete=models.CASCADE, verbose_name='پیام مربوطه')
 
+    def validate_file_size(file):
+        filesize = file.file.size
+        if filesize > int(settings.MAX_UPLOAD_FILE_SIZE):
+            raise ValidationError('حداکثر سایز عکس باید {} باشد'.format((filesizeformat(settings.MAX_UPLOAD_FILE_SIZE))))
+    
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, verbose_name='پیام مربوطه')
+    
     VALID_FILE_EXTENSION = ['pdf', 'png', 'jpg', 'jpeg', 'zip', 'rar', 'mp4', 'mkv']
-    file    = models.FileField(upload_to='files/', verbose_name='فایل', validators=[FileExtensionValidator(VALID_FILE_EXTENSION)])  # todo: add size validation (max 2 mg). [ask if u don't know how to add]
+    file    = models.FileField(upload_to='files/', verbose_name='فایل', validators=[FileExtensionValidator(VALID_FILE_EXTENSION), validate_file_size])
 
     class Meta:
         ordering= ['-id']
         verbose_name = 'فایل'
         verbose_name_plural = 'فایل ها'
+
+@receiver(pre_delete, sender=Attachment)
+def attachment_delete(sender, instance, **kwargs):
+    instance.file.delete(False)
