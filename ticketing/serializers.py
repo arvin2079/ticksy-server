@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from ticketing.models import Topic, ACTIVE
-from users.serializers import UserSerializer, UserSerializerForView
+from users.serializers import UserSerializer#, UserSerializerForView
 from users.models import User
 
 
