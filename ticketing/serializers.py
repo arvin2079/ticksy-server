@@ -1,31 +1,36 @@
 from rest_framework import serializers
-from ticketing.models import Topic
-from users.serializers import UserSerializer
+from ticketing.models import Topic, ACTIVE
+from users.serializers import UserSerializer, UserSerializerForView
 from users.models import User
 
 
 class TopicSerializer(serializers.ModelSerializer):
 
+    CREATOR   = 'سازنده'
+    SUPPORTER = 'ادمین'
+
+    role = serializers.SerializerMethodField()
+    #creator = UserSerializerForView()
+    #supporters = UserSerializerForView()
     class Meta:
         model  = Topic
-        # fields = ['id', 'title', 'description', 'slug', 'supporters']
         fields = '__all__'
-        # todo: need a field to determine role of user against that topic dynamically.
-    
-    # def create(self, validated_data):
-    #     obj         = super().create(validated_data)
-    #     supporters  = obj.supporters
-    #     validated_supporters = []
-    #     for supporter in supporters.all():
-    #         try:
-    #             User.objects.get(id=supporter.id)
-    #         except:
-    #             continue
-    #         else:
-    #             validated_supporters.append(supporter)
-    #     obj.supporters.clear()
-    #     obj.supporters.set(validated_supporters)
-    #     obj.creator     = self.context['request'].user
-    #     obj.save()
-    #     return obj
-    # todo: rewrite serializer and consider both list and create mode
+        read_only_fields = ['creator', 'is_active']
+        #depth = 1
+
+    def get_role(self, obj):
+        if self.context['request'].user == obj.creator:
+            return (self.CREATOR)
+        return (self.SUPPORTER)
+
+    def create(self, validated_data):
+        obj = super().create(validated_data)
+        user = self.context['request'].user
+        supporters = list(obj.supporters.all())
+        if user in supporters:
+            supporters.remove(user)
+            obj.supporters.set(supporters)
+        obj.is_active = ACTIVE
+        obj.creator = user
+        obj.save()
+        return obj
