@@ -9,17 +9,15 @@ from users.models import User
 
 ACTIVE   = '1'
 DEACTIVE = '2'
-DELETED  = '3'
 IS_ACTIVE_CHOICES = [
     (ACTIVE, 'فعال'),
-    (DEACTIVE, 'غیر فعال'),
-    (DELETED, 'حذف شده')
+    (DEACTIVE, 'غیر فعال')
 ]
 
 class Topic(models.Model):
 
     def validate_image_size(image):
-        filesize = image.file.size
+        filesize = image.size
         if filesize > int(settings.MAX_UPLOAD_IMAGE_SIZE):
             raise ValidationError('حداکثر سایز عکس باید {} باشد'.format((filesizeformat(settings.MAX_UPLOAD_IMAGE_SIZE))))
 
@@ -105,10 +103,10 @@ class Message(models.Model):
         return self.text[:limit] + ('...' if len(self.text) > limit else '')
     get_short_text.short_description = 'متن پیام'
 
-class Attachment(models.Model):  # todo: if an Attachment object is deleted, the file of that object should delete too (u can write that code manually or download the appropriate package). [ask if u don't know how to do]
+class Attachment(models.Model):
 
     def validate_file_size(file):
-        filesize = file.file.size
+        filesize = file.size
         if filesize > int(settings.MAX_UPLOAD_FILE_SIZE):
             raise ValidationError('حداکثر سایز عکس باید {} باشد'.format((filesizeformat(settings.MAX_UPLOAD_FILE_SIZE))))
     
