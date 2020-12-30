@@ -25,9 +25,9 @@ class Topic(models.Model):
     creator     = models.ForeignKey(User, related_name='created_topics', null=True, on_delete=models.PROTECT, verbose_name='سازنده')
     title       = models.CharField(max_length=100, verbose_name='عنوان')
     description = models.TextField(verbose_name='توضیحات', null=True, blank=True)
-    slug        = models.SlugField(max_length=30, unique=True, verbose_name='تگ آدرس', validators=[validate_slug], help_text='نام اینگلیسی مناسب برای لینک (به جای فاصله از خط تیره استفاده کنید)')
+    slug        = models.SlugField(max_length=30, null=False, unique=True, verbose_name='تگ آدرس', validators=[validate_slug], help_text='نام اینگلیسی مناسب برای لینک (به جای فاصله از خط تیره استفاده کنید)')
     is_active   = models.CharField(max_length=1, choices=IS_ACTIVE_CHOICES, default=ACTIVE, verbose_name='وضعیت')
-    avatar      = models.FileField(upload_to='topic-avatar/', null=True, blank=True, validators=[FileExtensionValidator(VALID_AVATAR_EXTENSION), validate_image_size], verbose_name='آواتار')
+    avatar      = models.FileField(upload_to='topic-avatar/', null=True, blank=True, validators=[FileExtensionValidator(VALID_AVATAR_EXTENSION), validate_image_size], verbose_name='آواتار', help_text='حداکثر سایز عکس باید {} باشد'.format((filesizeformat(settings.MAX_UPLOAD_IMAGE_SIZE))))
     supporters  = models.ManyToManyField(User, blank=True, related_name='supported_topics', verbose_name='پشتیبانان')
 
     def __str__(self):
@@ -113,7 +113,7 @@ class Attachment(models.Model):
     message = models.ForeignKey(Message, on_delete=models.CASCADE, verbose_name='پیام مربوطه')
     
     VALID_FILE_EXTENSION = ['pdf', 'png', 'jpg', 'jpeg', 'zip', 'rar', 'mp4', 'mkv']
-    file    = models.FileField(upload_to='files/', verbose_name='فایل', validators=[FileExtensionValidator(VALID_FILE_EXTENSION), validate_file_size])
+    file    = models.FileField(upload_to='files/', verbose_name='فایل', validators=[FileExtensionValidator(VALID_FILE_EXTENSION), validate_file_size], help_text='حداکثر سایز عکس باید {} باشد'.format((filesizeformat(settings.MAX_UPLOAD_FILE_SIZE))))
 
     class Meta:
         ordering= ['-id']
