@@ -1,36 +1,71 @@
-from rest_framework import serializers
+from django.db.models import Q
+from rest_framework import serializers, status
+from rest_framework.serializers import ValidationError
 from ticketing.models import Topic, ACTIVE
-from users.serializers import UserSerializer#, UserSerializerForView
-from users.models import User
+from users.serializers import UserSerializer, UserSerializerRestricted
+from users.models import User, IDENTIFIED
+from datetime import datetime
 
 
-class TopicSerializer(serializers.ModelSerializer):
+CREATOR   = '1'
+SUPPORTER = '2'
 
-    CREATOR   = 'سازنده'
-    SUPPORTER = 'ادمین'
+class TopicsSerializer(serializers.ModelSerializer):
 
+    supporters_ids = serializers.PrimaryKeyRelatedField(source='supporters', queryset=User.objects.all(), write_only=True, many=True)
     role = serializers.SerializerMethodField()
-    #creator = UserSerializerForView()
-    #supporters = UserSerializerForView()
+    creator = UserSerializerRestricted(read_only=True)
+    supporters = UserSerializerRestricted(many=True, read_only=True)
+
     class Meta:
         model  = Topic
-        fields = '__all__'
-        read_only_fields = ['creator', 'is_active']
-        #depth = 1
+        fields = ['creator', 'role', 'title', 'description', 'slug', 'url', 'avatar', 'supporters', 'supporters_ids']
+        read_only_fields = ['creator', 'is_active', 'url', 'supporters']
+        extra_kwargs = {
+            'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'slug'}
+        }
+
+    def validate_supporters_ids(self, value):
+        supporters = value
+        user = self.context['request'].user
+        if user in supporters:
+            supporters.remove(user)
+        for supporter in supporters:
+            if (supporter.identity.status != IDENTIFIED or (user.identity.expire_time < datetime.now() if user.identity.expire_time else False) and not user.is_superuser):
+                supporters.remove(supporter)
+        return supporters
 
     def get_role(self, obj):
         if self.context['request'].user == obj.creator:
-            return (self.CREATOR)
-        return (self.SUPPORTER)
+            return (CREATOR)
+        return (SUPPORTER)
 
     def create(self, validated_data):
-        obj = super().create(validated_data)
+        instance = super().create(validated_data)
         user = self.context['request'].user
-        supporters = list(obj.supporters.all())
-        if user in supporters:
-            supporters.remove(user)
-            obj.supporters.set(supporters)
-        obj.is_active = ACTIVE
-        obj.creator = user
-        obj.save()
-        return obj
+        instance.is_active = ACTIVE
+        instance.creator = user
+        instance.supporters.set(validated_data['supporters'])
+        instance.save()
+        return instance
+
+class TopicSerializer(TopicsSerializer):
+
+    class Meta:
+        model  = Topic
+        fields = ['creator', 'role', 'title', 'description', 'slug', 'url', 'avatar', 'supporters', 'supporters_ids']
+        read_only_fields = ['creator', 'is_active', 'title', 'slug', 'supporters']
+        lookup_field = 'slug'
+        extra_kwargs = {
+            'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'slug'}
+        }
+    
+    def update(self, instance, validated_data):
+        request = self.context['request']
+        user = request.user
+        instance.creator = user
+        instance.description = validated_data['description']
+        instance.avatar = validated_data['avatar']
+        instance.supporters.set(validated_data['supporters'])
+        instance.save()
+        return instance
