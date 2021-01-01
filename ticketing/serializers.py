@@ -2,7 +2,7 @@ from django.db.models import Q
 from rest_framework import serializers, status
 from rest_framework.serializers import ValidationError
 from ticketing.models import Topic, ACTIVE
-from users.serializers import UserSerializer, UserSerializerRestricted
+from users.serializers import UserSerializerRestricted
 from users.models import User, IDENTIFIED
 from datetime import datetime
 
@@ -22,7 +22,8 @@ class TopicsSerializer(serializers.ModelSerializer):
         fields = ['creator', 'role', 'title', 'description', 'slug', 'url', 'avatar', 'supporters', 'supporters_ids']
         read_only_fields = ['creator', 'is_active', 'url', 'supporters']
         extra_kwargs = {
-            'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'slug'}
+            'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'slug'},
+            'slug': {'write_only': True}
         }
 
     def validate_supporters_ids(self, value):
@@ -64,8 +65,11 @@ class TopicSerializer(TopicsSerializer):
         request = self.context['request']
         user = request.user
         instance.creator = user
-        instance.description = validated_data['description']
-        instance.avatar = validated_data['avatar']
-        instance.supporters.set(validated_data['supporters'])
+        if(validated_data['description']):
+            instance.description = validated_data['description']
+        if(validated_data['avatar']):
+            instance.avatar = validated_data['avatar']
+        if(validated_data['supporters']):
+            instance.supporters.set(validated_data['supporters'])
         instance.save()
         return instance
