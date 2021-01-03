@@ -1,10 +1,11 @@
 from django.db.models import Q
+from django.utils import timezone
 from rest_framework import serializers, status
 from rest_framework.serializers import ValidationError
 from ticketing.models import Topic, ACTIVE
 from users.serializers import UserSerializerRestricted
 from users.models import User, IDENTIFIED
-from datetime import datetime
+from datetime import timedelta
 
 
 CREATOR   = '1'
@@ -12,7 +13,7 @@ SUPPORTER = '2'
 
 class TopicsSerializer(serializers.ModelSerializer):
 
-    supporters_ids = serializers.PrimaryKeyRelatedField(source='supporters', queryset=User.objects.all(), write_only=True, many=True)
+    supporters_ids = serializers.PrimaryKeyRelatedField(source='supporters', queryset=User.objects.filter(Q(identity__status=IDENTIFIED) & Q(identity__expire_time__range=[timezone.now(), timezone.now() + timedelta(weeks=48*4)])), write_only=True, many=True)
     role = serializers.SerializerMethodField()
     creator = UserSerializerRestricted(read_only=True)
     supporters = UserSerializerRestricted(many=True, read_only=True)
@@ -31,9 +32,6 @@ class TopicsSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         if user in supporters:
             supporters.remove(user)
-        for supporter in supporters:
-            if (supporter.identity.status != IDENTIFIED or (user.identity.expire_time < datetime.now() if user.identity.expire_time else False) and not user.is_superuser):
-                supporters.remove(supporter)
         return supporters
 
     def get_role(self, obj):
@@ -46,7 +44,9 @@ class TopicsSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         instance.is_active = ACTIVE
         instance.creator = user
-        instance.supporters.set(validated_data['supporters'])
+        instance.supporters.set([])
+        if 'supporters' in validated_data:
+            instance.supporters.set(validated_data['supporters'])
         instance.save()
         return instance
 
@@ -54,8 +54,8 @@ class TopicSerializer(TopicsSerializer):
 
     class Meta:
         model  = Topic
-        fields = ['creator', 'role', 'title', 'description', 'slug', 'url', 'avatar', 'supporters', 'supporters_ids']
-        read_only_fields = ['creator', 'is_active', 'title', 'slug', 'supporters']
+        fields = ['creator', 'role', 'title', 'description', 'url', 'avatar', 'supporters', 'supporters_ids']
+        read_only_fields = ['creator', 'is_active', 'title', 'supporters']
         lookup_field = 'slug'
         extra_kwargs = {
             'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'slug'}
@@ -65,11 +65,11 @@ class TopicSerializer(TopicsSerializer):
         request = self.context['request']
         user = request.user
         instance.creator = user
-        if(validated_data['description']):
+        if 'description' in validated_data:
             instance.description = validated_data['description']
-        if(validated_data['avatar']):
+        if 'avatar' in validated_data:
             instance.avatar = validated_data['avatar']
-        if(validated_data['supporters']):
+        if 'supporters' in validated_data:
             instance.supporters.set(validated_data['supporters'])
         instance.save()
         return instance
