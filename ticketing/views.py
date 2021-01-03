@@ -1,5 +1,6 @@
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import permissions, status, generics, filters
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -7,7 +8,7 @@ from rest_framework.pagination import PageNumberPagination
 from users.models import IDENTIFIED
 from users.serializers import UserSerializerRestricted
 from users.models import User
-from datetime import datetime
+from datetime import timedelta
 from .models import Topic, DEACTIVE
 from .serializers import TopicsSerializer, TopicSerializer
 from .permissions import IsIdentified, IsOwner
@@ -44,7 +45,18 @@ class TopicRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
 
 class EmailListAPIView(generics.ListAPIView):
     serializer_class = UserSerializerRestricted
-    queryset = User.objects.all()
     permission_classes = [IsAuthenticated, IsIdentified]
     search_fields = ['email']
     filter_backends = [filters.SearchFilter]
+    pagination_class = None
+
+    def get_queryset(self):
+        start_date = timezone.now()
+        end_date = start_date + timedelta(weeks=48*4) # 4 years
+        return User.objects.filter(Q(identity__expire_time__range=[start_date, end_date]) & Q(identity__status=IDENTIFIED) & Q(is_staff=True)).distinct().order_by('-email')
+
+    def list(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        queryset = queryset[:10]
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
