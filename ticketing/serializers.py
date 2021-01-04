@@ -21,7 +21,7 @@ class TopicsSerializer(serializers.ModelSerializer):
     class Meta:
         model  = Topic
         fields = ['creator', 'role', 'title', 'description', 'slug', 'url', 'avatar', 'supporters', 'supporters_ids']
-        read_only_fields = ['creator', 'is_active', 'url', 'supporters']
+        read_only_fields = ['creator', 'role', 'is_active', 'url', 'supporters']
         extra_kwargs = {
             'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'slug'},
             'slug': {'write_only': True}
@@ -55,7 +55,7 @@ class TopicSerializer(TopicsSerializer):
     class Meta:
         model  = Topic
         fields = ['creator', 'role', 'title', 'description', 'url', 'avatar', 'supporters', 'supporters_ids']
-        read_only_fields = ['creator', 'is_active', 'title', 'supporters']
+        read_only_fields = ['creator', 'role', 'is_active', 'title', 'supporters', 'url']
         lookup_field = 'slug'
         extra_kwargs = {
             'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'slug'}
