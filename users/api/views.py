@@ -5,22 +5,32 @@ from rest_framework import permissions, generics, status
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.response import Response
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 from ..models import User, Identity
 from ..permissions import IdentifyPermission
-from .serializer import UserSerializer,\
-    SignupSerializer,\
-    ResetPasswordRequestSerializer,\
-    ResetPasswordNewPasswordSerializer,\
+from .serializer import UserSerializer, \
+    SignupSerializer, \
+    ResetPasswordRequestSerializer, \
+    ResetPasswordNewPasswordSerializer, \
     UserIdentitySerializer
 
 
 class UserInfoApiView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
-    permission_classes = (permissions.IsAuthenticated, )
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get_object(self):
         return self.request.user
+
+    @swagger_auto_schema(
+        responses={
+            401: 'not authenticated or wrong token is used',
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request)
 
 
 class SigninApiView(ObtainAuthToken):
@@ -42,6 +52,14 @@ class SignupApiView(generics.CreateAPIView):
     serializer_class = SignupSerializer
     permissions = (permissions.IsAuthenticated,)
 
+    @swagger_auto_schema(
+        responses={
+            400: 'bad request, make sure you fill the neccessary fields correnctly based on field validation '
+                 'provided in example value in json format\nvalidations:\n\t- first_name: in persian\n\t'
+                 '- last_name: in persian',
+            401: 'not authenticated or wrong token is used',
+        }
+    )
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
