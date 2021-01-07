@@ -36,6 +36,11 @@ class UserInfoApiView(generics.RetrieveUpdateAPIView):
 class SigninApiView(ObtainAuthToken):
     permissions = [permissions.AllowAny]  # just for intention be more explicit
 
+    @swagger_auto_schema(
+        responses={
+            400: 'bad request, make sure you enter the email as username and your true password correctly',
+        }
+    )
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
@@ -72,6 +77,11 @@ class SignupApiView(generics.CreateAPIView):
 class ResetPasswordRequest(generics.CreateAPIView):
     serializer_class = ResetPasswordRequestSerializer
 
+    @swagger_auto_schema(
+        responses={
+            400: 'not valid email or email does not exist!',
+        }
+    )
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
@@ -81,13 +91,19 @@ class ResetPasswordRequest(generics.CreateAPIView):
 
 class ResetPasswordValidateToken(generics.RetrieveAPIView):
 
+    @swagger_auto_schema(
+        responses={
+            500: 'possibly unicode decoding failed user have to try the process again',
+            401: 'not valid token or uib64 or not authorized yet',
+        }
+    )
     def get(self, request, uib64, token, *args, **kwargs):
         try:
             user_id = smart_str(urlsafe_base64_decode(uib64))
             user = User.objects.get(id=user_id)
             if not PasswordResetTokenGenerator().check_token(user, token):
                 return Response({'detail': 'کاربر با مشخصات وارد شده موجود نمی باشد'},
-                                status=status.HTTP_400_BAD_REQUEST)
+                                status=status.HTTP_401_UNAUTHORIZED)
 
             return Response({'detail': 'مشخصات معتبر'}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
@@ -100,6 +116,12 @@ class ResetPasswordValidateToken(generics.RetrieveAPIView):
 class ResetPasswordNewPassword(generics.GenericAPIView):
     serializer_class = ResetPasswordNewPasswordSerializer
 
+    @swagger_auto_schema(
+        responses={
+            401: 'user is not authenticated or the change password link is not validated for user',
+            500: 'possibly unicode decoding failed user have to try the process again',
+        }
+    )
     def patch(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

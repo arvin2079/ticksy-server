@@ -107,10 +107,11 @@ class ResetPasswordRequestSerializer(serializers.Serializer):
         )
 
     def validate(self, attrs):
-        if validator.validate_email(attrs['email']) and \
-                User.objects.filter(email=attrs['email']).exists():
-            return attrs
-        raise serializers.ValidationError('not valid email')
+        if not validator.validate_email(attrs['email']):
+            raise serializers.ValidationError('not valid email')
+        if not User.objects.filter(email=attrs['email']).exists():
+            raise serializers.ValidationError('no user with this email!')
+        return attrs
 
 
 class ResetPasswordNewPasswordSerializer(serializers.Serializer):
@@ -152,11 +153,9 @@ class ResetPasswordNewPasswordSerializer(serializers.Serializer):
 
             return attrs
         except User.DoesNotExist:
-            raise serializers.ValidationError('کاربر با این مشخصات موجود نیست')
-        except DjangoUnicodeDecodeError:
-            raise serializers.ValidationError('decoding process failed')
-        except:
-            raise serializers.ValidationError('error')
+            raise AuthenticationFailed('کاربر با این مشخصات موجود نیست', 401)
+        # except DjangoUnicodeDecodeError:
+        #     raise serializers.ValidationError('decoding process failed')
 
 
 class UserIdentitySerializer(serializers.ModelSerializer):
