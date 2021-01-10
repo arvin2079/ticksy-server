@@ -21,8 +21,28 @@ class IsOwner(permissions.BasePermission):
     status_code = status.HTTP_403_FORBIDDEN
 
     def has_object_permission(self, request, view, obj):
-        if request.method in SAFE_METHODS:
-            return True
         if obj.creator == request.user:
             return True
         return False
+
+
+class IsTicketOwnerOrTopicOwner(permissions.BasePermission):
+    message = 'شما سازنده یا ادمین این تیکت نیستید.'
+    status_code = status.HTTP_403_FORBIDDEN
+
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+        if user == obj.ticket.topic.creator or user in obj.ticket.topic.supporters or user == obj.ticket.creator:
+            return True
+        return False
+
+
+class IsSupporterOrOwnerOrTicketCreator(permissions.BasePermission):
+    message = 'فقط سازنده های تیکت ها میتوانند به پیام ادمین ها رتبه دهند و برعکس.'
+    status_code = status.HTTP_403_FORBIDDEN
+
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+        ticket = obj.ticket
+        topic = obj.ticket.topic
+        return (((user == topic.creator or user in topic.supporters) and obj.user == ticket.creator) or (user == ticket.creator and (obj.user == topic.creator or obj.user in topic.supporters)))
