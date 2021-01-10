@@ -116,9 +116,12 @@ class MessageSerializer(serializers.ModelSerializer):
     attachments = serializers.ListField(child=serializers.FileField(), write_only=True)
     class Meta:
         model = Message
-        fields = ['id', 'user', 'date', 'rate', 'text', 'attachment_set', 'attachments']
-        read_only_fields = ['id', 'user', 'rate', 'date', 'attachment_set']
-    
+        fields = ['id', 'user', 'date', 'rate', 'text', 'url', 'attachment_set', 'attachments']
+        read_only_fields = ['id', 'user', 'rate', 'date', 'attachment_set', 'url']
+        extra_kwargs = {
+            'url': {'view_name': 'message-rate-update', 'lookup_field': 'id'}
+        }
+
     def create(self, validated_data):
         attachments = validated_data['attachments']
         validated_data.pop('attachments')
@@ -141,6 +144,7 @@ class MessageUpdateSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'user', 'date', 'text', 'attachment_set']
     
     def update(self, instance, validated_data):
-        instance.rate = validated_data['rate']
+        if 'rate' in validated_data:
+            instance.rate = validated_data['rate']
         instance.save()
         return instance
