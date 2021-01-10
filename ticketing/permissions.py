@@ -44,5 +44,5 @@ class IsSupporterOrOwnerOrTicketCreator(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         user = request.user
         ticket = obj.ticket
-        topic = obj.ticket.topic
+        topic = ticket.topic
         return (((user == topic.creator or user in topic.supporters) and obj.user == ticket.creator) or (user == ticket.creator and (obj.user == topic.creator or obj.user in topic.supporters)))
