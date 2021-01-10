@@ -113,7 +113,7 @@ class Attachment(models.Model):
     message = models.ForeignKey(Message, on_delete=models.CASCADE, verbose_name='پیام مربوطه')
     
     VALID_FILE_EXTENSION = ['pdf', 'png', 'jpg', 'jpeg', 'zip', 'rar', 'mp4', 'mkv']
-    file    = models.FileField(upload_to='files/', verbose_name='فایل', validators=[FileExtensionValidator(VALID_FILE_EXTENSION), validate_file_size], help_text='حداکثر سایز عکس باید {} باشد'.format((filesizeformat(settings.MAX_UPLOAD_FILE_SIZE))))
+    attachmentfile    = models.FileField(upload_to='files/', verbose_name='فایل', validators=[FileExtensionValidator(VALID_FILE_EXTENSION), validate_file_size], help_text='حداکثر سایز عکس باید {} باشد'.format((filesizeformat(settings.MAX_UPLOAD_FILE_SIZE))))
 
     class Meta:
         ordering= ['-id']
@@ -122,4 +122,4 @@ class Attachment(models.Model):
 
 @receiver(pre_delete, sender=Attachment)
 def attachment_delete(sender, instance, **kwargs):
-    instance.file.delete(False)
+    instance.attachmentfile.delete(False)
