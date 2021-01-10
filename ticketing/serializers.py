@@ -2,7 +2,7 @@ from django.db.models import Q
 from django.utils import timezone
 from rest_framework import serializers, status
 from rest_framework.serializers import ValidationError
-from ticketing.models import Topic, ACTIVE
+from ticketing.models import Topic, Ticket, Message, Attachment, ACTIVE
 from users.serializers import UserSerializerRestricted
 from users.models import User, IDENTIFIED
 from datetime import timedelta
@@ -10,6 +10,7 @@ from datetime import timedelta
 
 CREATOR   = '1'
 SUPPORTER = '2'
+
 
 class TopicsSerializer(serializers.ModelSerializer):
 
@@ -20,8 +21,8 @@ class TopicsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model  = Topic
-        fields = ['creator', 'role', 'title', 'description', 'slug', 'url', 'avatar', 'supporters', 'supporters_ids']
-        read_only_fields = ['creator', 'role', 'is_active', 'url', 'supporters']
+        fields = ['id', 'creator', 'role', 'title', 'description', 'slug', 'url', 'avatar', 'supporters', 'supporters_ids']
+        read_only_fields = ['id', 'creator', 'role', 'is_active', 'url', 'supporters']
         extra_kwargs = {
             'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'slug'},
             'slug': {'write_only': True}
@@ -50,12 +51,13 @@ class TopicsSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
 class TopicSerializer(TopicsSerializer):
 
     class Meta:
         model  = Topic
-        fields = ['creator', 'role', 'title', 'description', 'url', 'avatar', 'supporters', 'supporters_ids']
-        read_only_fields = ['creator', 'role', 'is_active', 'title', 'supporters', 'url']
+        fields = ['id', 'creator', 'role', 'title', 'description', 'url', 'avatar', 'supporters', 'supporters_ids']
+        read_only_fields = ['id', 'creator', 'role', 'is_active', 'title', 'supporters', 'url']
         lookup_field = 'slug'
         extra_kwargs = {
             'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'slug'}
@@ -71,5 +73,74 @@ class TopicSerializer(TopicsSerializer):
             instance.avatar = validated_data['avatar']
         if 'supporters' in validated_data:
             instance.supporters.set(validated_data['supporters'])
+        instance.save()
+        return instance
+
+
+class AttachmentSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Attachment
+        fields = ['attachmentfile']
+
+
+class TicketSerializer(serializers.ModelSerializer):
+
+    text = serializers.CharField(write_only=True)
+    attachments = serializers.ListField(child=serializers.FileField(), write_only=True)
+    creator = UserSerializerRestricted(read_only=True)
+    class Meta:
+        model = Ticket
+        fields = ['id', 'creator', 'title', 'status', 'priority', 'text', 'attachments']
+        read_only_fields = ['id', 'creator', 'topic', 'status']
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        text = validated_data['text']
+        attachments = validated_data['attachments']
+        validated_data.pop('text')
+        validated_data.pop('attachments')
+        validated_data['creator'] = user
+        validated_data['topic'] = Topic.objects.get(slug=self.context.get('view').kwargs.get('slug'))
+        instance = super().create(validated_data)
+        message = Message.objects.create(user=user, date=timezone.now(), text=text, ticket=instance)
+        for attachment in attachments:
+            Attachment.objects.create(message=message, attachmentfile=attachment)
+        return instance
+
+
+class MessageSerializer(serializers.ModelSerializer):
+
+    user = UserSerializerRestricted(read_only=True)
+    attachment_set = AttachmentSerializer(read_only=True, many=True)
+    attachments = serializers.ListField(child=serializers.FileField(), write_only=True)
+    class Meta:
+        model = Message
+        fields = ['id', 'user', 'date', 'rate', 'text', 'attachment_set', 'attachments']
+        read_only_fields = ['id', 'user', 'rate', 'date', 'attachment_set']
+    
+    def create(self, validated_data):
+        attachments = validated_data['attachments']
+        validated_data.pop('attachments')
+        user = self.context['request'].user
+        validated_data['user'] = user
+        validated_data['ticket'] = Ticket.objects.get(id=self.context.get('view').kwargs.get('id'))
+        instance = super().create(validated_data)
+        for attachment in attachments:
+            Attachment.objects.create(attachmentfile=attachment, message=instance)
+        return instance
+
+
+class MessageUpdateSerializer(serializers.ModelSerializer):
+
+    user = UserSerializerRestricted(read_only=True)
+    attachment_set = AttachmentSerializer(read_only=True, many=True)
+    class Meta:
+        model = Message
+        fields = ['id', 'user', 'date', 'rate', 'text', 'attachment_set']
+        read_only_fields = ['id', 'user', 'date', 'text', 'attachment_set']
+    
+    def update(self, instance, validated_data):
+        instance.rate = validated_data['rate']
         instance.save()
         return instance
