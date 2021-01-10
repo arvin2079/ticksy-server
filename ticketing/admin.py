@@ -54,4 +54,5 @@ class MessageAdmin(admin.ModelAdmin):
 admin.site.register(Topic, TopicAdmin)
 admin.site.register(Ticket, TicketAdmin)
 admin.site.register(Message, MessageAdmin)
+admin.site.register(Attachment)
 # admin.site.register(Attachment, AttachmentAdmin)
