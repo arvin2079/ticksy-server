@@ -1,0 +1,15 @@
+image: docker:stable
+
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  script:
+    - rm -rf /temp/*
+    - cp -R ./* /temp
+    - docker-compose up -d --force-recreate
+  tags:
+    - KhuServer
+  only:
+    - production

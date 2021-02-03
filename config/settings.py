@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,12 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '--qk8vealh#!_049a!qx7h=z+ox+ow4mo@s6+_lw-kvp^o93q8'
+SECRET_KEY = os.environ.get("SECRET_KEY", '--qk8vealh#!_049a!qx7h=z+ox+ow4mo@s6+_lw-kvp^o93q8')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", '').split(" ")
 
 
 # Application definition
@@ -129,10 +130,11 @@ REST_FRAMEWORK = {
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ticksy_db',
-        'USER': 'ticksy',
-        'PASSWORD': 'Ticksy_1234',
+        "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.mysql"),
+        "NAME": os.environ.get("SQL_DATABASE", "ticksy_db"),
+        "USER": os.environ.get("SQL_USER", "ticksy"),
+        "PASSWORD": os.environ.get("SQL_PASSWORD", "Ticksy_1234"),
+        "HOST": os.environ.get("SQL_HOST", "localhost"),
     }
 }
 
@@ -188,11 +190,11 @@ MEDIA_URL = '/media/'
 
 # checklist for production : STATIC_ROOT, MEDIA_ROOT, DEBUG, ALLOWED_HOSTS, Database
 
-EMAIL_HOST = 'mail.margay.ir'
-EMAIL_PORT = 587
-EMAIL_HOST_USER = 'no-reply-khu@margay.ir'
-EMAIL_HOST_PASSWORD = 'fuw9MUM7rir!lunk'
-EMAIL_USE_TLS = False
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'mail.margay.ir')
+EMAIL_PORT =  int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'no-reply-khu@margay.ir')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'fuw9MUM7rir!lunk')
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", 'False').lower() in ['true', '1']
 # EMAIL_USE_SSL = True
 
 # file and image size
