@@ -14,13 +14,14 @@ IS_ACTIVE_CHOICES = [
     (DEACTIVE, 'غیر فعال')
 ]
 
+
+def validate_image_size(image):
+    filesize = image.size
+    if filesize > int(settings.MAX_UPLOAD_IMAGE_SIZE):
+        raise ValidationError('حداکثر سایز عکس باید {} باشد'.format((filesizeformat(settings.MAX_UPLOAD_IMAGE_SIZE))))
+
+
 class Topic(models.Model):
-
-    def validate_image_size(self, image):
-        filesize = image.size
-        if filesize > int(settings.MAX_UPLOAD_IMAGE_SIZE):
-            raise ValidationError('حداکثر سایز عکس باید {} باشد'.format((filesizeformat(settings.MAX_UPLOAD_IMAGE_SIZE))))
-
     VALID_AVATAR_EXTENSION = ['png', 'jpg', 'jpeg']
     creator     = models.ForeignKey(User, related_name='created_topics', null=True, on_delete=models.PROTECT, verbose_name='سازنده')
     title       = models.CharField(max_length=100, verbose_name='عنوان')
@@ -104,12 +105,14 @@ class Message(models.Model):
         return self.text[:limit] + ('...' if len(self.text) > limit else '')
     get_short_text.short_description = 'متن پیام'
 
-class Attachment(models.Model):
 
-    def validate_file_size(file):
-        filesize = file.size
-        if filesize > int(settings.MAX_UPLOAD_FILE_SIZE):
-            raise ValidationError('حداکثر سایز عکس باید {} باشد'.format((filesizeformat(settings.MAX_UPLOAD_FILE_SIZE))))
+def validate_file_size(file):
+    filesize = file.size
+    if filesize > int(settings.MAX_UPLOAD_FILE_SIZE):
+        raise ValidationError('حداکثر سایز عکس باید {} باشد'.format((filesizeformat(settings.MAX_UPLOAD_FILE_SIZE))))
+
+
+class Attachment(models.Model):
     
     message = models.ForeignKey(Message, on_delete=models.CASCADE, verbose_name='پیام مربوطه')
     
