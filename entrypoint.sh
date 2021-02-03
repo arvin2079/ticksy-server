@@ -14,6 +14,7 @@ export LC_ALL="fa_IR.UTF-8"
 rm -rf /static/*
 
 cp -rT /src /app
+rm -rf /src
 
 cd /app
 
