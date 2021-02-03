@@ -16,7 +16,7 @@ IS_ACTIVE_CHOICES = [
 
 class Topic(models.Model):
 
-    def validate_image_size(image):
+    def validate_image_size(self, image):
         filesize = image.size
         if filesize > int(settings.MAX_UPLOAD_IMAGE_SIZE):
             raise ValidationError('حداکثر سایز عکس باید {} باشد'.format((filesizeformat(settings.MAX_UPLOAD_IMAGE_SIZE))))
@@ -29,6 +29,7 @@ class Topic(models.Model):
     is_active   = models.CharField(max_length=1, choices=IS_ACTIVE_CHOICES, default=ACTIVE, verbose_name='وضعیت')
     avatar      = models.FileField(upload_to='topic-avatar/', null=True, blank=True, validators=[FileExtensionValidator(VALID_AVATAR_EXTENSION), validate_image_size], verbose_name='آواتار', help_text='حداکثر سایز عکس باید {} باشد'.format((filesizeformat(settings.MAX_UPLOAD_IMAGE_SIZE))))
     supporters  = models.ManyToManyField(User, blank=True, related_name='supported_topics', verbose_name='پشتیبانان')
+    is_recommended = models.BooleanField(verbose_name='پیشنهادی', default=False, help_text='در صورت فعال بودن این گزینه آدرس بخش مورد نظر در صفحه اصلی نمایش داده خواهد شد')
 
     def __str__(self):
         return self.title

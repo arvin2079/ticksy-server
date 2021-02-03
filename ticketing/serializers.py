@@ -148,3 +148,14 @@ class MessageUpdateSerializer(serializers.ModelSerializer):
             instance.rate = validated_data['rate']
         instance.save()
         return instance
+
+
+class RecommendedTopicsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Topic
+        fields = ['title', 'description', 'slug', 'url', 'avatar']
+        read_only_fields = fields
+        extra_kwargs = {
+            'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'slug'}
+        }

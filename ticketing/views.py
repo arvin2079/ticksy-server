@@ -4,7 +4,7 @@ from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, generics, filters
 from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from rest_framework.pagination import PageNumberPagination
 from users.models import IDENTIFIED
 from users.serializers import UserSerializerRestricted
@@ -144,3 +144,11 @@ class MessageUpdateAPIView(generics.UpdateAPIView):
     
     def get_object(self):
         return get_object_or_404(self.get_queryset())
+
+
+class GetRecommendedTopicsAPIView(generics.ListAPIView):
+    serializer_class = RecommendedTopicsSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        return Topic.objects.filter(is_recommended=True)
