@@ -2,6 +2,9 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.translation import gettext as _
 
+from rest_framework.authtoken.models import TokenProxy
+from rest_framework.authtoken.admin import TokenAdmin
+
 from .models import User, Identity
 
 
@@ -35,3 +38,4 @@ class IdentityAdmin(admin.ModelAdmin):
 
 admin.site.register(User, UserAdmin)
 admin.site.register(Identity, IdentityAdmin)
+admin.site.unregister(TokenProxy)

@@ -46,9 +46,11 @@ class User(PermissionsMixin, AbstractBaseUser):
 
     class Meta:
         ordering = ['date_joined']
+        verbose_name = 'کاربران'
+        verbose_name_plural = 'کاربران'
 
     def __str__(self):
-        return self.first_name + " " + self.last_name
+        return self.first_name + " " + self.last_name if self.first_name else self.email[0:self.email.index('@')]
 
 
 REQUESTED    = '1'
