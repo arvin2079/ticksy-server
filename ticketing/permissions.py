@@ -1,31 +1,48 @@
-import datetime
-
+from datetime import datetime
 from rest_framework import permissions
 from users.models import IDENTIFIED
+from rest_framework import status
+from rest_framework.permissions import SAFE_METHODS
 
 
 class IsIdentified(permissions.BasePermission):
+    message = 'هویت شما هنوز توسط ادمین تایید نشده است.'
+    status_code = status.HTTP_403_FORBIDDEN
 
     def has_permission(self, request, view):
-        # try:
-        #     print(request.user.username)
-        #     user = User.objects.get(username=request.user.username)
-        # except Exception as e:
-        #     print(e)
-        #     return False
-        # if request.user.is_superuser:
-        #     return True
-        # if not request.user == user:
-        #     print(1)
-        #     return False
-        # else:
-        #     return True
         user = request.user
-
-        # todo: remove button section after adding identity signal
-        # -----------------------------
         if not hasattr(user, 'identity'):
             return False
-        # -----------------------------
+        return (user.identity.status == IDENTIFIED and (user.identity.expire_time > datetime.now() if user.identity.expire_time else True)) or user.is_superuser
 
-        return (user.identity.status == IDENTIFIED and (user.identity.expire_time > datetime.datetime.now() if user.identity.expire_time else True)) or user.is_superuser
+
+class IsOwner(permissions.BasePermission):
+    message = 'شما سازنده این تاپیک نیستید.'
+    status_code = status.HTTP_403_FORBIDDEN
+
+    def has_object_permission(self, request, view, obj):
+        if obj.creator == request.user:
+            return True
+        return False
+
+
+class IsTicketOwnerOrTopicOwner(permissions.BasePermission):
+    message = 'شما سازنده یا ادمین این تیکت نیستید.'
+    status_code = status.HTTP_403_FORBIDDEN
+
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+        if user == obj.ticket.topic.creator or user in obj.ticket.topic.supporters or user == obj.ticket.creator:
+            return True
+        return False
+
+
+class IsSupporterOrOwnerOrTicketCreator(permissions.BasePermission):
+    message = 'فقط سازنده های تیکت ها میتوانند به پیام ادمین ها رتبه دهند و برعکس.'
+    status_code = status.HTTP_403_FORBIDDEN
+
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+        ticket = obj.ticket
+        topic = ticket.topic
+        return (((user == topic.creator or user in topic.supporters) and obj.user == ticket.creator) or (user == ticket.creator and (obj.user == topic.creator or obj.user in topic.supporters)))

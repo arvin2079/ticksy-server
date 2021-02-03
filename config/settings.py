@@ -105,8 +105,8 @@ REST_FRAMEWORK = {
 
     'DEFAULT_RENDERER_CLASSES': RENDERER,
 
-    # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    #                             'PAGE_SIZE': market_default_variables.DEFAULT_PAGE_SIZE,
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
 
     # 'DEFAULT_FILTER_BACKENDS': [
     #     'django_filters.rest_framework.DjangoFilterBackend',
@@ -194,3 +194,9 @@ EMAIL_HOST_USER = 'no-reply-khu@margay.ir'
 EMAIL_HOST_PASSWORD = 'fuw9MUM7rir!lunk'
 EMAIL_USE_TLS = False
 # EMAIL_USE_SSL = True
+
+# file and image size
+# 2 MB
+MAX_UPLOAD_FILE_SIZE = '2097152'
+# 400 KB
+MAX_UPLOAD_IMAGE_SIZE = '419430'
