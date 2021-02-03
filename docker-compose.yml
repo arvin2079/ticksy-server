@@ -16,7 +16,7 @@ services:
     external_links:
       - mysql
     volumes:
-      - .:/app
+      - /srv/TicksyAPI/src:/app
       - /srv/TicksyAPI/static:/static
       - /srv/TicksyAPI/pip:/root/.cache/pip
 
