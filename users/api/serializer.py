@@ -9,13 +9,13 @@ from rest_framework.reverse import reverse
 from rest_framework.exceptions import AuthenticationFailed
 
 import users.validators as validator
-from ..models import *
+from ..models import User, Identity
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'code', 'avatar', 'groups', 'date_joined']
+        fields = ['id', 'first_name', 'last_name', 'email', 'code', 'avatar', 'date_joined']
 
 
 class SignupSerializer(serializers.Serializer):
@@ -107,10 +107,11 @@ class ResetPasswordRequestSerializer(serializers.Serializer):
         )
 
     def validate(self, attrs):
-        if validator.validate_email(attrs['email']) and \
-                User.objects.filter(email=attrs['email']).exists():
-            return attrs
-        raise serializers.ValidationError('not valid email')
+        if not validator.validate_email(attrs['email']):
+            raise serializers.ValidationError('not valid email')
+        if not User.objects.filter(email=attrs['email']).exists():
+            raise serializers.ValidationError('no user with this email!')
+        return attrs
 
 
 class ResetPasswordNewPasswordSerializer(serializers.Serializer):
@@ -152,8 +153,13 @@ class ResetPasswordNewPasswordSerializer(serializers.Serializer):
 
             return attrs
         except User.DoesNotExist:
-            raise serializers.ValidationError('کاربر با این مشخصات موجود نیست')
-        except DjangoUnicodeDecodeError:
-            raise serializers.ValidationError('decoding process failed')
-        except:
-            raise serializers.ValidationError('error')
+            raise AuthenticationFailed('کاربر با این مشخصات موجود نیست', 401)
+        # except DjangoUnicodeDecodeError:
+        #     raise serializers.ValidationError('decoding process failed')
+
+
+class UserIdentitySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Identity
+        fields = ['identifier_image', 'request_time', 'expire_time', 'status']

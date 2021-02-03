@@ -95,6 +95,7 @@ RENDERER = ['rest_framework.renderers.JSONRenderer', ]
 if DEBUG:
     RENDERER += ['rest_framework.renderers.BrowsableAPIRenderer', ]
 
+
 REST_FRAMEWORK = {
 
     'DEFAULT_AUTHENTICATION_CLASSES': [

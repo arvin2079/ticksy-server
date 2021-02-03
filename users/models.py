@@ -5,12 +5,17 @@ from django.utils.translation import ugettext_lazy as _
 
 class UserManager(BaseUserManager):
 
+    def create_user_identity(self, user):
+        identity = Identity(user=user)
+        identity.save()
+
     def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError('user must have email')
         user = self.model(email=self.normalize_email(email), **extra_fields)
         user.set_password(password)
         user.save()
+        self.create_user_identity(user)
         return user
 
     def create_superuser(self, email, password):
@@ -18,13 +23,14 @@ class UserManager(BaseUserManager):
         user.is_staff = True
         user.is_superuser = True
         user.save()
+        self.create_user_identity(user)
         return user
 
 
 ## TODO : ask if i should add "auto_now_add=True" to "last_login" ???   No :))
+## TODO: 1-add validators to fields and appropriate verbose_name. 2-add as much as you can fields and methods of AbstractUser (why didn't just override AbstractUser?).
 
 class User(PermissionsMixin, AbstractBaseUser):
-    # todo: 1-add validators to fields and appropriate verbose_name. 2-add as much as you can fields and methods of AbstractUser (why didn't just override AbstractUser?).
     email = models.EmailField(unique=True, max_length=255)
     first_name = models.CharField(_('first name'), max_length=30, blank=True)
     last_name = models.CharField(_('last name'), max_length=30, blank=True)
@@ -46,9 +52,9 @@ class User(PermissionsMixin, AbstractBaseUser):
         return self.first_name + " " + self.last_name
 
 
-REQUESTED   = '1'
-IDENTIFIED  = '2'
-UNIDENTIFIED= '3'
+REQUESTED    = '1'
+IDENTIFIED   = '2'
+UNIDENTIFIED = '3'
 STATUS_CHOICES = (
     (IDENTIFIED, 'احراز شده'),
     (REQUESTED, 'درخواست احراز'),
@@ -62,7 +68,10 @@ class Identity(models.Model):  # todo: should auto created with user.
     expire_time         = models.DateTimeField(blank=True, null=True, verbose_name='زمان ابطال')
     status              = models.CharField(choices=STATUS_CHOICES, default=UNIDENTIFIED, verbose_name='وضعیت', max_length=1)
 
+    def __str__(self):
+        return str(self.user) + ' ' + self.status
+
     class Meta:
-        ordering=['-request_time']
+        ordering = ['-request_time']
         verbose_name = 'احراز هویت'
         verbose_name_plural = 'احراز هویت'
