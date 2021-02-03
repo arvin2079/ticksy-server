@@ -13,6 +13,8 @@ export LC_ALL="fa_IR.UTF-8"
 
 rm -rf /static/*
 
+cp -rT /src /app
+
 cd /app
 
 pip install -r requirements.txt
