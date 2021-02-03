@@ -23,7 +23,6 @@ class UserManager(BaseUserManager):
         user.is_staff = True
         user.is_superuser = True
         user.save()
-        self.create_user_identity(user)
         return user
 
 
