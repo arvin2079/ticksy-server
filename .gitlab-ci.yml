@@ -7,7 +7,7 @@ deploy:
   stage: deploy
   script:
     - rm -rf /temp/*
-    - cp -R ./* /temp
+    - cp -rT ./ /temp
     - docker-compose up -d --force-recreate
   tags:
     - KhuServer
