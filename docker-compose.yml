@@ -5,7 +5,7 @@ services:
     image: python:latest
     container_name: ticksyAPI
     entrypoint: bash
-    command: /app/entrypoint.sh
+    command: /src/entrypoint.sh
     restart: always
     ports:
       - 8000:8000
@@ -16,7 +16,7 @@ services:
     external_links:
       - mysql
     volumes:
-      - /srv/TicksyAPI/src:/app
+      - /srv/TicksyAPI/src:/src
       - /srv/TicksyAPI/static:/static
       - /srv/TicksyAPI/pip:/root/.cache/pip
       - /srv/TicksyAPI/migrations:/app/ticketing/migrations

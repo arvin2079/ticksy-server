@@ -6,7 +6,6 @@ stages:
 deploy:
   stage: deploy
   script:
-    - chmod -R a+wr /temp
     - rm -rf /temp/*
     - cp -rT ./ /temp
     - docker-compose up -d --force-recreate
