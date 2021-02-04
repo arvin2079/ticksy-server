@@ -4,12 +4,12 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from rest_framework import permissions, generics, status
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-from ..models import User, Identity
-from ..permissions import IdentifyPermission
+from ..models import User, Identity, IDENTIFIED
 from .serializer import UserSerializer, \
     SignupSerializer, \
     ResetPasswordRequestSerializer, \
@@ -130,8 +130,12 @@ class ResetPasswordNewPassword(generics.GenericAPIView):
 
 class IdentityApiView(generics.RetrieveUpdateAPIView):
     serializer_class = UserIdentitySerializer
-    permission_classes = (permissions.IsAuthenticated, IdentifyPermission)
+    permission_classes = [permissions.IsAuthenticated]
+
+    def update(self, request, *args, **kwargs):
+        if request.user.identity.status != IDENTIFIED:
+            return super(IdentityApiView, self).update(request, *args, **kwargs)
+        raise PermissionDenied('You are Identified! So you should not change identifier image by yourself')
 
     def get_object(self):
-        user = self.request.user
-        return Identity.objects.filter(user=user).first()
+        return self.request.user.identity
