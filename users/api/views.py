@@ -7,9 +7,8 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 
-from ..models import User, Identity, IDENTIFIED
+from ..models import User, IDENTIFIED
 from .serializer import UserSerializer, \
     SignupSerializer, \
     ResetPasswordRequestSerializer, \
@@ -72,7 +71,6 @@ class SignupApiView(generics.CreateAPIView):
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
 
-
 class ResetPasswordRequest(generics.CreateAPIView):
     serializer_class = ResetPasswordRequestSerializer
 
@@ -85,7 +83,8 @@ class ResetPasswordRequest(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response({'detail': 'An email has now been sent to your account successfully'}, status=status.HTTP_200_OK)
+        return Response({'detail': 'An email has now been sent to your account successfully'},
+                        status=status.HTTP_200_OK)
 
 
 class ResetPasswordValidateToken(generics.RetrieveAPIView):

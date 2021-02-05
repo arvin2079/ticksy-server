@@ -8,7 +8,8 @@ def user_avatar_directory_path(instance, filename):
 
 
 def user_identifier_image_directory_path(instance, filename):
-    return 'user/{0}/identifier-image/{1}'.format(str(instance.user.email)[0:str(instance.user.email).index('@')], filename)
+    return 'user/{0}/identifier-image/{1}'.format(str(instance.user.email)[0:str(instance.user.email).index('@')],
+                                                  filename)
 
 
 class UserManager(BaseUserManager):
@@ -34,8 +35,8 @@ class UserManager(BaseUserManager):
         return user
 
 
-## TODO : ask if i should add "auto_now_add=True" to "last_login" ???   No :))
-## TODO: 1-add validators to fields and appropriate verbose_name. 2-add as much as you can fields and methods of AbstractUser (why didn't just override AbstractUser?).
+# TODO: 1-add validators to fields and appropriate verbose_name.
+#  2-add as much as you can fields and methods of AbstractUser (why didn't just override AbstractUser?).
 
 class User(PermissionsMixin, AbstractBaseUser):
     email = models.EmailField(unique=True, max_length=255)
@@ -61,8 +62,8 @@ class User(PermissionsMixin, AbstractBaseUser):
         return self.first_name + " " + self.last_name if self.first_name else self.email[0:self.email.index('@')]
 
 
-REQUESTED    = '1'
-IDENTIFIED   = '2'
+REQUESTED = '1'
+IDENTIFIED = '2'
 UNIDENTIFIED = '3'
 STATUS_CHOICES = (
     (IDENTIFIED, 'احراز شده'),
@@ -70,12 +71,14 @@ STATUS_CHOICES = (
     (UNIDENTIFIED, 'احراز نشده')
 )
 
+
 class Identity(models.Model):  # todo: should auto created with user.
-    user                = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='کاربر')
-    identifier_image    = models.ImageField(upload_to=user_identifier_image_directory_path, blank=True, null=True, verbose_name='عکس احراز هویت')
-    request_time        = models.DateTimeField(null=True, blank=True, verbose_name='زمان درخواست')
-    expire_time         = models.DateTimeField(blank=True, null=True, verbose_name='زمان ابطال')
-    status              = models.CharField(choices=STATUS_CHOICES, default=UNIDENTIFIED, verbose_name='وضعیت', max_length=1)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='کاربر')
+    identifier_image = models.ImageField(upload_to=user_identifier_image_directory_path, blank=True, null=True,
+                                         verbose_name='عکس احراز هویت')
+    request_time = models.DateTimeField(null=True, blank=True, verbose_name='زمان درخواست')
+    expire_time = models.DateTimeField(blank=True, null=True, verbose_name='زمان ابطال')
+    status = models.CharField(choices=STATUS_CHOICES, default=UNIDENTIFIED, verbose_name='وضعیت', max_length=1)
 
     def __str__(self):
         return str(self.user) + ' ' + self.status
