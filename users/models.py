@@ -3,6 +3,14 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 
+def user_avatar_directory_path(instance, filename):
+    return 'user/{0}/avatar/{1}'.format(str(instance.email)[0:str(instance.email).index('@')], filename)
+
+
+def user_identifier_image_directory_path(instance, filename):
+    return 'user/{0}/identifier-image/{1}'.format(str(instance.user.email)[0:str(instance.user.email).index('@')], filename)
+
+
 class UserManager(BaseUserManager):
 
     def create_user_identity(self, user):
@@ -34,10 +42,10 @@ class User(PermissionsMixin, AbstractBaseUser):
     first_name = models.CharField(_('first name'), max_length=30, blank=True)
     last_name = models.CharField(_('last name'), max_length=30, blank=True)
     is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     date_joined = models.DateTimeField(_('date joined'), auto_now_add=True)
-    avatar = models.ImageField(_('avatar'), upload_to='avatars/', blank=True, null=True)
+    avatar = models.ImageField(_('avatar'), upload_to=user_avatar_directory_path, blank=True, null=True)
     code = models.IntegerField(_('code'), blank=True, null=True)
 
     objects = UserManager()
@@ -45,7 +53,7 @@ class User(PermissionsMixin, AbstractBaseUser):
     USERNAME_FIELD = 'email'
 
     class Meta:
-        ordering = ['date_joined']
+        ordering = ['-date_joined']
         verbose_name = 'کاربران'
         verbose_name_plural = 'کاربران'
 
@@ -64,7 +72,7 @@ STATUS_CHOICES = (
 
 class Identity(models.Model):  # todo: should auto created with user.
     user                = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='کاربر')
-    identifier_image    = models.ImageField(upload_to='pics/', blank=True, null=True, verbose_name='عکس پرسنلی')
+    identifier_image    = models.ImageField(upload_to=user_identifier_image_directory_path, blank=True, null=True, verbose_name='عکس احراز هویت')
     request_time        = models.DateTimeField(null=True, blank=True, verbose_name='زمان درخواست')
     expire_time         = models.DateTimeField(blank=True, null=True, verbose_name='زمان ابطال')
     status              = models.CharField(choices=STATUS_CHOICES, default=UNIDENTIFIED, verbose_name='وضعیت', max_length=1)

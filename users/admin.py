@@ -29,7 +29,7 @@ class UserAdmin(BaseUserAdmin):
 class IdentityAdmin(admin.ModelAdmin):
     list_display = ('user', 'status', 'request_time', 'expire_time')
     list_filter  = ['status', 'request_time', 'expire_time']
-    search_fields = ['user']
+    search_fields = ['user', 'email']
 
     # fieldsets     = [
     #     (None, {'fields': ['user', 'identifier_image', 'status', 'expire_time']})

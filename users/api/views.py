@@ -55,11 +55,11 @@ class SigninApiView(ObtainAuthToken):
 
 class SignupApiView(generics.CreateAPIView):
     serializer_class = SignupSerializer
-    permissions = (permissions.IsAuthenticated,)
+    permissions = (permissions.AllowAny,)
 
     @swagger_auto_schema(
         responses={
-            400: 'bad request, make sure you fill the neccessary fields correnctly based on field validation '
+            400: 'bad request, make sure you fill the necessary fields correctly based on field validation '
                  'provided in example value in json format\nvalidations:\n\t- first_name: in persian\n\t'
                  '- last_name: in persian',
             401: 'not authenticated or wrong token is used',
@@ -67,11 +67,10 @@ class SignupApiView(generics.CreateAPIView):
     )
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+
 
 
 class ResetPasswordRequest(generics.CreateAPIView):
@@ -86,7 +85,7 @@ class ResetPasswordRequest(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response({'detail': 'An email has now been sent to your account successfuly'}, status=status.HTTP_200_OK)
+        return Response({'detail': 'An email has now been sent to your account successfully'}, status=status.HTTP_200_OK)
 
 
 class ResetPasswordValidateToken(generics.RetrieveAPIView):
@@ -110,7 +109,10 @@ class ResetPasswordValidateToken(generics.RetrieveAPIView):
             return Response({'detail': 'مشخصات نامعبر'}, status=status.HTTP_401_UNAUTHORIZED)
         except DjangoUnicodeDecodeError:
             return Response({'detail': 'decoding process failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # todo: should be completely remove?
+        except:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ResetPasswordNewPassword(generics.GenericAPIView):
