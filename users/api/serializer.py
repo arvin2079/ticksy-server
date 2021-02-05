@@ -1,6 +1,7 @@
+import datetime
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import send_mail
-from django.utils.encoding import smart_bytes, smart_str, DjangoUnicodeDecodeError
+from django.utils.encoding import smart_bytes, smart_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
 
@@ -9,7 +10,7 @@ from rest_framework.reverse import reverse
 from rest_framework.exceptions import AuthenticationFailed
 
 import users.validators as validator
-from ..models import User, Identity
+from ..models import User, Identity, REQUESTED
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -100,10 +101,10 @@ class ResetPasswordRequestSerializer(serializers.Serializer):
         email_body = 'hello\nuse this link below to reset your password\n{link}'.format(link=relative_link)
 
         send_mail(
-            email_title,  ## title
-            email_body,  ## body
-            'no-reply-khu@margay.ir',  ## from
-            [email, ],  ## to
+            email_title,  # title
+            email_body,  # body
+            'no-reply-khu@margay.ir',  # from
+            [email, ],  # to
         )
 
     def validate(self, attrs):
@@ -137,29 +138,38 @@ class ResetPasswordNewPasswordSerializer(serializers.Serializer):
     )
 
     def validate(self, attrs):
+        password = attrs.get('password')
+        token = attrs.get('token')
+        uib64 = attrs.get('uib64')
+
+        user_id = smart_str(urlsafe_base64_decode(uib64))
         try:
-            print(attrs['password'])
-            password = attrs.get('password')
-            token = attrs.get('token')
-            uib64 = attrs.get('uib64')
-
-            user_id = smart_str(urlsafe_base64_decode(uib64))
             user = User.objects.get(id=user_id)
-            if not PasswordResetTokenGenerator().check_token(user, token):
-                raise AuthenticationFailed('لینک تغییر رمز نامعتبر', 401)
-
-            user.set_password(password)
-            user.save()
-
-            return attrs
         except User.DoesNotExist:
             raise AuthenticationFailed('کاربر با این مشخصات موجود نیست', 401)
+
+        if not PasswordResetTokenGenerator().check_token(user, token):
+            raise AuthenticationFailed('لینک تغییر رمز نامعتبر', 401)
+
+        user.set_password(password)
+        user.save()
+
+        return attrs
+
         # except DjangoUnicodeDecodeError:
         #     raise serializers.ValidationError('decoding process failed')
 
 
 class UserIdentitySerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Identity
         fields = ['identifier_image', 'request_time', 'expire_time', 'status']
+        read_only_fields = ['request_time', 'expire_time', 'status']
+
+    def update(self, instance, validated_data):
+        super(UserIdentitySerializer, self).update(instance, validated_data)
+        instance.request_time = datetime.datetime.now()
+        instance.expire_time = None
+        instance.status = REQUESTED
+        instance.save()
+        return instance

@@ -13,4 +13,3 @@ urlpatterns = [
          name='reset_password_confirm_credential'),
     path('reset_password/new-password/', ResetPasswordNewPassword.as_view(), name='reset_password_new_password'),
 ]
-

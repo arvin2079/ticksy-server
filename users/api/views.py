@@ -4,12 +4,11 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from rest_framework import permissions, generics, status
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 
-from ..models import User, Identity
-from ..permissions import IdentifyPermission
+from ..models import User, IDENTIFIED
 from .serializer import UserSerializer, \
     SignupSerializer, \
     ResetPasswordRequestSerializer, \
@@ -55,11 +54,11 @@ class SigninApiView(ObtainAuthToken):
 
 class SignupApiView(generics.CreateAPIView):
     serializer_class = SignupSerializer
-    permissions = (permissions.IsAuthenticated,)
+    permissions = (permissions.AllowAny,)
 
     @swagger_auto_schema(
         responses={
-            400: 'bad request, make sure you fill the neccessary fields correnctly based on field validation '
+            400: 'bad request, make sure you fill the necessary fields correctly based on field validation '
                  'provided in example value in json format\nvalidations:\n\t- first_name: in persian\n\t'
                  '- last_name: in persian',
             401: 'not authenticated or wrong token is used',
@@ -67,11 +66,9 @@ class SignupApiView(generics.CreateAPIView):
     )
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ResetPasswordRequest(generics.CreateAPIView):
@@ -86,7 +83,8 @@ class ResetPasswordRequest(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response({'detail': 'An email has now been sent to your account successfuly'}, status=status.HTTP_200_OK)
+        return Response({'detail': 'An email has now been sent to your account successfully'},
+                        status=status.HTTP_200_OK)
 
 
 class ResetPasswordValidateToken(generics.RetrieveAPIView):
@@ -110,7 +108,10 @@ class ResetPasswordValidateToken(generics.RetrieveAPIView):
             return Response({'detail': 'مشخصات نامعبر'}, status=status.HTTP_401_UNAUTHORIZED)
         except DjangoUnicodeDecodeError:
             return Response({'detail': 'decoding process failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # todo: should be completely remove?
+        except:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ResetPasswordNewPassword(generics.GenericAPIView):
@@ -130,8 +131,12 @@ class ResetPasswordNewPassword(generics.GenericAPIView):
 
 class IdentityApiView(generics.RetrieveUpdateAPIView):
     serializer_class = UserIdentitySerializer
-    permission_classes = (permissions.IsAuthenticated, IdentifyPermission)
+    permission_classes = [permissions.IsAuthenticated]
+
+    def update(self, request, *args, **kwargs):
+        if request.user.identity.status != IDENTIFIED:
+            return super(IdentityApiView, self).update(request, *args, **kwargs)
+        raise PermissionDenied('You are Identified! So you should not change identifier image by yourself')
 
     def get_object(self):
-        user = self.request.user
-        return Identity.objects.filter(user=user).first()
+        return self.request.user.identity
