@@ -7,6 +7,8 @@ urlpatterns = [
     path('profile/', UserInfoApiView.as_view(), name='user_info'),
     path('signin/', SigninApiView.as_view(), name='user_signin'),
     path('signup/', SignupApiView.as_view(), name='user_signup'),
+    path('signup/confirm-credential/<str:uib64>/<str:token>', ActivateEmail.as_view(),
+         name='email_activation'),
     path('identity/', IdentityApiView.as_view(), name='user_identity'),
     path('reset_password/request/', ResetPasswordRequest.as_view(), name='reset_password_request'),
     path('reset_password/confirm-credential/<str:uib64>/<str:token>', ResetPasswordValidateToken.as_view(),
