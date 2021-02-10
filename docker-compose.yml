@@ -17,7 +17,8 @@ services:
       - mysql
     volumes:
       - /srv/TicksyAPI/src:/src
-      - /srv/TicksyAPI/static:/static
+      - /srv/TicksyAPI/media:/app/media
+      - /srv/TicksyAPI/static:/app/static
       - /srv/TicksyAPI/pip:/root/.cache/pip
       - /srv/TicksyAPI/migrations:/app/ticketing/migrations
 
