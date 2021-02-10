@@ -2,7 +2,7 @@ from django.db.models import Q
 from django.utils import timezone
 from rest_framework import serializers, status
 from rest_framework.serializers import ValidationError
-from ticketing.models import Topic, Ticket, Message, Attachment, ACTIVE
+from ticketing.models import Topic, Ticket, Message, Attachment, ACTIVE, ANSWERED, WAITING_FOR_ANSWER
 from users.serializers import UserSerializerRestricted
 from users.models import User, IDENTIFIED
 from datetime import timedelta
@@ -130,7 +130,13 @@ class MessageSerializer(serializers.ModelSerializer):
         instance = super().create(validated_data)
         for attachment in attachments:
             Attachment.objects.create(attachmentfile=attachment, message=instance)
-        instance.ticket.last_update = timezone.now()
+
+        if instance.user in instance.ticket.topic.supporters or instance.user == instance.ticket.topic.creator:
+            instance.ticket.status = ANSWERED
+        else:
+            instance.ticket.status = WAITING_FOR_ANSWER
+        instance.ticket.save()
+
         return instance
 
 
