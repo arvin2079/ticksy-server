@@ -77,7 +77,7 @@ class SignupApiView(generics.CreateAPIView):
 
 
 class ActivateEmail(generics.RetrieveAPIView):
-    ## FIXME : if it is not get and is post so what should be the serializer???
+
     def get(self, request, uib64, token, *args, **kwargs):
         try:
             user_id = smart_str(urlsafe_base64_decode(uib64))
