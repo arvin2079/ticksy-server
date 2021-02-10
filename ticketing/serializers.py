@@ -14,7 +14,7 @@ SUPPORTER = '2'
 
 class TopicsSerializer(serializers.ModelSerializer):
 
-    supporters_ids = serializers.PrimaryKeyRelatedField(source='supporters', queryset=User.objects.filter(Q(identity__status=IDENTIFIED) & Q(identity__expire_time__range=[timezone.now(), timezone.now() + timedelta(weeks=48*4)])), write_only=True, many=True)
+    supporters_ids = serializers.PrimaryKeyRelatedField(source='supporters', queryset=User.objects.filter(Q(identity__status=IDENTIFIED) & (Q(identity__expire_time__isnull=True) | Q(identity__expire_time__gt=timezone.now()))), write_only=True, many=True)
     role = serializers.SerializerMethodField()
     creator = UserSerializerRestricted(read_only=True)
     supporters = UserSerializerRestricted(many=True, read_only=True)
@@ -24,8 +24,7 @@ class TopicsSerializer(serializers.ModelSerializer):
         fields = ['id', 'creator', 'role', 'title', 'description', 'slug', 'url', 'avatar', 'supporters', 'supporters_ids']
         read_only_fields = ['id', 'creator', 'role', 'is_active', 'url', 'supporters']
         extra_kwargs = {
-            'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'slug'},
-            'slug': {'write_only': True}
+            'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'slug'}
         }
 
     def validate_supporters_ids(self, value):
@@ -43,7 +42,6 @@ class TopicsSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         instance = super().create(validated_data)
         user = self.context['request'].user
-        instance.is_active = ACTIVE
         instance.creator = user
         instance.supporters.set([])
         if 'supporters' in validated_data:
@@ -64,9 +62,6 @@ class TopicSerializer(TopicsSerializer):
         }
     
     def update(self, instance, validated_data):
-        request = self.context['request']
-        user = request.user
-        instance.creator = user
         if 'description' in validated_data:
             instance.description = validated_data['description']
         if 'avatar' in validated_data:
@@ -89,10 +84,14 @@ class TicketSerializer(serializers.ModelSerializer):
     text = serializers.CharField(write_only=True)
     attachments = serializers.ListField(child=serializers.FileField(), write_only=True)
     creator = UserSerializerRestricted(read_only=True)
+
     class Meta:
         model = Ticket
-        fields = ['id', 'creator', 'title', 'status', 'priority', 'text', 'attachments']
+        fields = ['id', 'creator', 'title', 'status', 'priority', 'text', 'attachments', 'last_update', 'creation_date', 'url']
         read_only_fields = ['id', 'creator', 'topic', 'status']
+        extra_kwargs = {
+            'url': {'view_name': 'message-list-create', 'lookup_field': 'id'}
+        }
 
     def create(self, validated_data):
         user = self.context['request'].user
@@ -113,7 +112,8 @@ class MessageSerializer(serializers.ModelSerializer):
 
     user = UserSerializerRestricted(read_only=True)
     attachment_set = AttachmentSerializer(read_only=True, many=True)
-    attachments = serializers.ListField(child=serializers.FileField(), write_only=True)
+    attachments = serializers.ListField(child=serializers.FileField(), write_only=True, required=False)
+
     class Meta:
         model = Message
         fields = ['id', 'user', 'date', 'rate', 'text', 'url', 'attachment_set', 'attachments']
@@ -123,14 +123,14 @@ class MessageSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        attachments = validated_data['attachments']
-        validated_data.pop('attachments')
+        attachments = validated_data.pop('attachments', [])
         user = self.context['request'].user
         validated_data['user'] = user
         validated_data['ticket'] = Ticket.objects.get(id=self.context.get('view').kwargs.get('id'))
         instance = super().create(validated_data)
         for attachment in attachments:
             Attachment.objects.create(attachmentfile=attachment, message=instance)
+        instance.ticket.last_update = timezone.now()
         return instance
 
 

@@ -34,25 +34,25 @@ class TopicListCreateAPIView(generics.ListCreateAPIView):
         return self.create(request, *args, **kwargs)
 
     def get_queryset(self):
-        return Topic.objects.filter((Q(creator=self.request.user) | Q(supporters__in=[self.request.user])) & Q(is_active='1')).distinct().order_by('-id')
+        return Topic.objects.filter((Q(creator=self.request.user) | Q(supporters__in=[self.request.user])) & Q(is_active=True)).distinct().order_by('-id')
 
 
 class TopicRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TopicSerializer
     permission_classes = [IsAuthenticated, IsIdentified, IsOwner]
     lookup_field = 'slug'
-    http_method_names = ['get', 'put', 'delete']
+    http_method_names = ['get', 'patch', 'delete']
 
     @swagger_auto_schema(operation_description='Searches for a topic and returns the topic that has a slug exactly matched with the url slug(if exist).\nmethod: GET\nurl: /topics/\<slug\>\nexample: /topics/amoozesh-khu', responses=get_topic_dictionary_response)
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
 
-    @swagger_auto_schema(operation_description='Updates the Topic and returns it\'s value.\nmethod: PUT\nurl: /topics/\<slug\>\nexample: /topics/amoozesh-khu', responses=put_topic_dictionary_response, request_body=put_topic_dictionary_request_body)
-    def put(self, request, *args, **kwargs):
-        return self.update(request, *args, **kwargs)
+    @swagger_auto_schema(operation_description='Updates the Topic and returns it\'s value.\nmethod: PATCH\nurl: /topics/\<slug\>\nexample: /topics/amoozesh-khu', responses=put_topic_dictionary_response, request_body=put_topic_dictionary_request_body)
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
 
     def get_queryset(self):
-        return Topic.objects.filter((Q(creator=self.request.user) | Q(supporters__in=[self.request.user])) & Q(is_active='1')).distinct()
+        return Topic.objects.filter((Q(creator=self.request.user) | Q(supporters__in=[self.request.user])) & Q(is_active=True)).distinct()
 
     def get_object(self):
         queryset = self.filter_queryset(self.get_queryset())
@@ -63,7 +63,7 @@ class TopicRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     @swagger_auto_schema(operation_description='Deletes the Topic.\nmethod: DELETE\nurl: /topics/\<slug\>\nexample: /topics/amoozesh-khu', responses=delete_topic_dictionary_response)
     def delete(self, request, slug=None):
         instance = self.get_object()
-        instance.is_active = DEACTIVE
+        instance.is_active = False
         instance.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -92,25 +92,33 @@ class EmailListAPIView(generics.ListAPIView):
         return Response(serializer.data)
 
 
-class TicketListCreateAPIView(generics.ListCreateAPIView):
+class TicketListAPIView(generics.ListAPIView):
     serializer_class = TicketSerializer
-    permission_classes = [IsAuthenticated, IsIdentified]
+    permission_classes = [IsAuthenticated]
     search_fields = ['id', 'title']
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     filterset_class = TicketFilter
-    http_method_names = ['get', 'post']
+    http_method_names = ['get']
 
-    @swagger_auto_schema(operation_description='Returns a list of Tickets with the same Topic slug as the slug in url.\nmethod: GET\nurl: /topics/\<slug\>/tickets/?search=searchtext&status=1&page=1\nexample: /topics/amoozesh-khu/tickets/?search=1&status=2&page=1\nOptional search field in the url, will search on \"id\" and \"title\".\nOptional status, filters the results based on the status field in the model (status can have \{0, 1, 2, 3, 4\} values)\nIn status, 0 means no filter, others mean status field in the model has to be equal to status in the url', responses=get_ticket_dictionary_response)
+    @swagger_auto_schema(operation_description='Returns a list of Tickets that belong to the user.\nmethod: GET\nurl: /tickets/?search=searchtext&status=1&page=1\nexample: tickets/?search=1&status=2&page=1\nOptional search field in the url, will search on \"id\" and \"title\".\nOptional status, filters the results based on the status field in the model (status can have \{0, 1, 2, 3, 4\} values)\nIn status, 0 means no filter, others mean status field in the model has to be equal to status in the url', responses=get_ticket_dictionary_response)
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
+
+    # @swagger_auto_schema(operation_description='Creates a new Ticket and relates it to the Topic that It\'s slug is inserted in the url.\nmethod: POST\nurl: /topics/\<slug\>/tickets/\nexample: /topics/amoozesh-khu/tickets/', responses=post_ticket_dictionary_response, request_body=post_ticket_dictionary_request_body)
+    # def post(self, request, *args, **kwargs):
+    #     return self.create(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return Ticket.objects.filter(creator=self.request.user)
+
+
+class TicketCreateAPIView(generics.CreateAPIView):
+    serializer_class = TicketSerializer
+    permission_classes = [IsAuthenticated, IsIdentified]
 
     @swagger_auto_schema(operation_description='Creates a new Ticket and relates it to the Topic that It\'s slug is inserted in the url.\nmethod: POST\nurl: /topics/\<slug\>/tickets/\nexample: /topics/amoozesh-khu/tickets/', responses=post_ticket_dictionary_response, request_body=post_ticket_dictionary_request_body)
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
-
-    def get_queryset(self):
-        return Ticket.objects.filter(Q(topic=Topic.objects.get(slug=self.kwargs.get('slug')))).order_by('-id')
-
 
 class MessageListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = MessageSerializer
@@ -122,7 +130,7 @@ class MessageListCreateAPIView(generics.ListCreateAPIView):
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
-    @swagger_auto_schema(operation_description='Creates a new Message and relates it to the Ticket that It\'s id is inserted in the url.\nmethod: POST\nurl: /topics/\<slug\>/tickets/\<id\>\nexample: /topics/amoozesh-khu/tickets/18/', responses=post_message_dictionary_response, request_body=post_message_dictionary_request_body)
+    @swagger_auto_schema(operation_id='topics_tickets_message_create', operation_description='Creates a new Message and relates it to the Ticket that It\'s id is inserted in the url.\nmethod: POST\nurl: /topics/\<slug\>/tickets/\<id\>\nexample: /topics/amoozesh-khu/tickets/18/', responses=post_message_dictionary_response, request_body=post_message_dictionary_request_body)
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
 

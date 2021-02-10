@@ -10,13 +10,23 @@ from rest_framework.reverse import reverse
 from rest_framework.exceptions import AuthenticationFailed
 
 import users.validators as validator
-from ..models import User, Identity, REQUESTED
+from ..models import User, Identity, REQUESTED, IDENTIFIED
+from ..utils import token_generator
 
 
 class UserSerializer(serializers.ModelSerializer):
+
+    is_identified = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'code', 'avatar', 'date_joined']
+        fields = ['id', 'first_name', 'last_name', 'email', 'code', 'avatar', 'date_joined', 'is_identified']
+
+    def get_is_identified(self, obj):
+        if not hasattr(obj, 'identity'):
+            return False
+        return obj.identity.status == IDENTIFIED
+
 
 
 class SignupSerializer(serializers.Serializer):
@@ -32,15 +42,35 @@ class SignupSerializer(serializers.Serializer):
     )
     first_name = serializers.CharField(label=_('firstname'))
     last_name = serializers.CharField(label=_('lastname'))
+    code = serializers.CharField(label=_('code'), required=False)
 
     def create(self, validated_data):
         """ Create and return a new `user` instance, given the validated data. """
-        return User.objects.create_user(email=validated_data.pop('email'),
-                                        password=validated_data.pop('password'), **validated_data)
+        request = self.context['request']
+        email = validated_data['email']
+
+        user = User.objects.create_user(validated_data.pop('email'), validated_data.pop('password'), **validated_data)
+        user.is_active = False
+        user.save()
+
+        uib64 = urlsafe_base64_encode(smart_bytes(user.id))
+        token = token_generator.make_token(user)
+        # relative_link = reverse('users:email_activation',
+        #                         request=request, kwargs={'uib64': uib64, 'token': token})
+        relative_link = 'http://ticksy.margay.ir/confirm-email/?uib64={0}&token={1}'.format(uib64, token)
+
+        email_title = 'TickSy Email Verification'
+        email_body = 'hello\nuse this link below to verify your email address\n{link}'.format(link=relative_link)
+        send_mail(
+            email_title,  # title
+            email_body,  # body
+            'no-reply-khu@margay.ir',  # from
+            [email, ],  # to
+        )
+        return user
 
     def update(self, instance, validated_data):
         """ Update and return an existing `user` instance, given the validated data. """
-        instance.email = validated_data.get('email')
         instance.first_name = validated_data.get('first_name')
         instance.last_name = validated_data.get('last_name')
         instance.code = validated_data.get('code')
@@ -49,8 +79,13 @@ class SignupSerializer(serializers.Serializer):
         return instance
 
     def validate(self, attrs):
-        if User.objects.filter(email=attrs.get('email')):
-            raise serializers.ValidationError("email address has been taken befor")
+        email = attrs['email']
+        user = User.objects.filter(email=email)
+        if user.exists():
+            if user.first().is_active:
+                raise serializers.ValidationError('یوزر با این ایمیل از قبل موجود می باشد!')
+            else:
+                user.delete()
         return attrs
 
     def validate_email(self, email):
@@ -94,8 +129,9 @@ class ResetPasswordRequestSerializer(serializers.Serializer):
         uib64 = urlsafe_base64_encode(smart_bytes(user.id))
         token = PasswordResetTokenGenerator().make_token(user)
 
-        relative_link = reverse('users:reset_password_confirm_credential',
-                                request=request, kwargs={'uib64': uib64, 'token': token})
+        # relative_link = reverse('users:reset_password_confirm_credential',
+        #                         request=request, kwargs={'uib64': uib64, 'token': token})
+        relative_link = 'http://ticksy.margay.ir/confirm-reset-password/?uib64={0}&token={1}'.format(uib64, token)
 
         email_title = 'change password link for TickSy'
         email_body = 'hello\nuse this link below to reset your password\n{link}'.format(link=relative_link)

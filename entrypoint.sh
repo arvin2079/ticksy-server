@@ -11,8 +11,6 @@ apt-get update && \
 export LANG="fa_IR.UTF-8"
 export LC_ALL="fa_IR.UTF-8"
 
-rm -rf /static/*
-
 cp -rT /src /app
 rm -rf /src
 
@@ -21,8 +19,6 @@ cd /app
 pip install -r requirements.txt
 
 python manage.py collectstatic --noinput
-
-cp -r static/. /static/
 
 python manage.py makemigrations
 

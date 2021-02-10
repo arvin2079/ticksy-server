@@ -9,11 +9,11 @@ from .models import User, Identity
 
 class UserAdmin(BaseUserAdmin):
     ordering = ['id']
-    list_display = ('email', 'first_name', 'last_name', 'is_staff')
+    list_display = ('email', 'first_name', 'last_name', 'is_staff', 'is_active')
     search_fields = ['email', 'first_name', 'last_name']
     readonly_fields = ('date_joined', 'last_login')
     fieldsets = (
-        (None, {'fields': ('email', 'first_name', 'last_name', 'avatar', 'code', 'password')}),
+        (None, {'fields': ('email', 'first_name', 'last_name', 'avatar', 'code', 'password', 'is_active')}),
         (_('important dates'), {'fields': ('date_joined', 'last_login')}),
     )
 
