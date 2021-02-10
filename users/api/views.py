@@ -87,7 +87,7 @@ class ActivateEmail(generics.RetrieveAPIView):
                                 status=status.HTTP_401_UNAUTHORIZED)
             user.is_active = True
             user.save()
-            token, created = Token.objects.get(user=user)
+            token, created = Token.objects.get_or_create(user=user)
             return Response({
                 'token': token.key,
             })
