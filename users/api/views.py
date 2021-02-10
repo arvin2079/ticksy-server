@@ -64,8 +64,7 @@ class SignupApiView(generics.CreateAPIView):
             400: 'bad request, user exist or yout have to make sure you fill the necessary fields correctly based on '
                  'field validation '
                  'provided in example value in json format\nvalidations:\n\t- first_name: in persian\n\t'
-                 '- last_name: in persian',
-            401: 'not authenticated or wrong token is used',
+                 '- last_name: in persian'
         }
     )
     def post(self, request, *args, **kwargs):
