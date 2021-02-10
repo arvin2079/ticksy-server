@@ -1,27 +1,27 @@
 from django.db.models import Q
 from django.utils import timezone
-from rest_framework import serializers, status
-from rest_framework.serializers import ValidationError
-from ticketing.models import Topic, Ticket, Message, Attachment, ACTIVE, ANSWERED, WAITING_FOR_ANSWER
+from rest_framework import serializers
+from ticketing.models import Topic, Ticket, Message, Attachment, ANSWERED, WAITING_FOR_ANSWER
 from users.serializers import UserSerializerRestricted
 from users.models import User, IDENTIFIED
-from datetime import timedelta
 
-
-CREATOR   = '1'
+CREATOR = '1'
 SUPPORTER = '2'
 
 
 class TopicsSerializer(serializers.ModelSerializer):
-
-    supporters_ids = serializers.PrimaryKeyRelatedField(source='supporters', queryset=User.objects.filter(Q(identity__status=IDENTIFIED) & (Q(identity__expire_time__isnull=True) | Q(identity__expire_time__gt=timezone.now()))), write_only=True, many=True)
+    supporters_ids = serializers.PrimaryKeyRelatedField(source='supporters', queryset=User.objects.filter(
+        Q(identity__status=IDENTIFIED) & (
+                Q(identity__expire_time__isnull=True) | Q(identity__expire_time__gt=timezone.now()))),
+                                                        write_only=True, many=True)
     role = serializers.SerializerMethodField()
     creator = UserSerializerRestricted(read_only=True)
     supporters = UserSerializerRestricted(many=True, read_only=True)
 
     class Meta:
-        model  = Topic
-        fields = ['id', 'creator', 'role', 'title', 'description', 'slug', 'url', 'avatar', 'supporters', 'supporters_ids']
+        model = Topic
+        fields = ['id', 'creator', 'role', 'title', 'description', 'slug', 'url', 'avatar', 'supporters',
+                  'supporters_ids']
         read_only_fields = ['id', 'creator', 'role', 'is_active', 'url', 'supporters']
         extra_kwargs = {
             'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'slug'}
@@ -36,8 +36,8 @@ class TopicsSerializer(serializers.ModelSerializer):
 
     def get_role(self, obj):
         if self.context['request'].user == obj.creator:
-            return (CREATOR)
-        return (SUPPORTER)
+            return CREATOR
+        return SUPPORTER
 
     def create(self, validated_data):
         instance = super().create(validated_data)
@@ -51,16 +51,15 @@ class TopicsSerializer(serializers.ModelSerializer):
 
 
 class TopicSerializer(TopicsSerializer):
-
     class Meta:
-        model  = Topic
+        model = Topic
         fields = ['id', 'creator', 'role', 'title', 'description', 'url', 'avatar', 'supporters', 'supporters_ids']
         read_only_fields = ['id', 'creator', 'role', 'is_active', 'title', 'supporters', 'url']
         lookup_field = 'slug'
         extra_kwargs = {
             'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'slug'}
         }
-    
+
     def update(self, instance, validated_data):
         if 'description' in validated_data:
             instance.description = validated_data['description']
@@ -73,21 +72,20 @@ class TopicSerializer(TopicsSerializer):
 
 
 class AttachmentSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Attachment
         fields = ['attachmentfile']
 
 
 class TicketSerializer(serializers.ModelSerializer):
-
     text = serializers.CharField(write_only=True)
     attachments = serializers.ListField(child=serializers.FileField(), write_only=True)
     creator = UserSerializerRestricted(read_only=True)
 
     class Meta:
         model = Ticket
-        fields = ['id', 'creator', 'title', 'status', 'priority', 'text', 'attachments', 'last_update', 'creation_date', 'url']
+        fields = ['id', 'creator', 'title', 'status', 'priority', 'text', 'attachments', 'last_update', 'creation_date',
+                  'url']
         read_only_fields = ['id', 'creator', 'topic', 'status']
         extra_kwargs = {
             'url': {'view_name': 'message-list-create', 'lookup_field': 'id'}
@@ -109,7 +107,6 @@ class TicketSerializer(serializers.ModelSerializer):
 
 
 class MessageSerializer(serializers.ModelSerializer):
-
     user = UserSerializerRestricted(read_only=True)
     attachment_set = AttachmentSerializer(read_only=True, many=True)
     attachments = serializers.ListField(child=serializers.FileField(), write_only=True, required=False)
@@ -140,9 +137,9 @@ class MessageSerializer(serializers.ModelSerializer):
 
 
 class MessageUpdateSerializer(serializers.ModelSerializer):
-
     user = UserSerializerRestricted(read_only=True)
     attachment_set = AttachmentSerializer(read_only=True, many=True)
+
     class Meta:
         model = Message
         fields = ['id', 'user', 'date', 'rate', 'text', 'attachment_set']
@@ -156,7 +153,6 @@ class MessageUpdateSerializer(serializers.ModelSerializer):
 
 
 class RecommendedTopicsSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Topic
         fields = ['title', 'description', 'slug', 'url', 'avatar']

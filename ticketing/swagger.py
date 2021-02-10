@@ -2,60 +2,59 @@ from drf_yasg import openapi
 from .serializers import *
 from users.serializers import UserSerializerRestricted
 
-
 _403 = openapi.Response(
-        description='You are not still authenticated by admins.',
-        schema=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'detail':openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='Description of error'
-                )
-            }
-        ),
-        examples={
-            'application/json':{
-                "detail": "هویت شما هنوز توسط ادمین تایید نشده است."
-            }
+    description='You are not still authenticated by admins.',
+    schema=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'detail': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='Description of error'
+            )
         }
-    )
+    ),
+    examples={
+        'application/json': {
+            "detail": "هویت شما هنوز توسط ادمین تایید نشده است."
+        }
+    }
+)
 
 _401 = openapi.Response(
-        description='You are not logged in.',
-        schema=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'detail':openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='Description of error'
-                )
-            }
-        ),
-        examples={
-            'application/json':{
-                "detail": "اطلاعات برای اعتبارسنجی ارسال نشده است."
-            }
+    description='You are not logged in.',
+    schema=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'detail': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='Description of error'
+            )
         }
-    )
+    ),
+    examples={
+        'application/json': {
+            "detail": "اطلاعات برای اعتبارسنجی ارسال نشده است."
+        }
+    }
+)
 
 _404 = openapi.Response(
-        description='The Topic not found.',
-        schema=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'detail':openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description='Description of error'
-                )
-            }
-        ),
-        examples={
-            'application/json':{
-                "detail": "یافت نشد."
-            }
+    description='The Topic not found.',
+    schema=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'detail': openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description='Description of error'
+            )
         }
-    )
+    ),
+    examples={
+        'application/json': {
+            "detail": "یافت نشد."
+        }
+    }
+)
 
 get_email_dictionary_response = {
     200: openapi.Response(
@@ -86,7 +85,7 @@ get_topic_dictionary_response = {
         description='Returns a topic.\n\"role\" means role of the loged in guy related to this topic.\n\"role\" can have two values: 1=creator and 2=supporter.',
         schema=TopicSerializer,
         examples={
-            'application/json':{
+            'application/json': {
                 "creator": {
                     "id": 3,
                     "first_name": "علی",
@@ -140,8 +139,8 @@ put_topic_dictionary_request_body = openapi.Schema(
                 description='The id\'s of new supporters',
                 items=openapi.Schema(
                     type=openapi.TYPE_INTEGER
+                )
             )
-        )
     }
 )
 
@@ -151,7 +150,7 @@ put_topic_dictionary_response = {
         schema=TopicSerializer,
         examples=
         {
-            'application/json':{
+            'application/json': {
                 "creator": {
                     "id": 1,
                     "first_name": "ممد",
@@ -193,7 +192,7 @@ get_topics_dictionary_response = {
         description='Returns a list of Topics that a user is creator or supporter of them. (users role are recorded in \"role\" value)',
         schema=TopicsSerializer,
         examples={
-            'application/json':{
+            'application/json': {
                 "count": 3,
                 "next": None,
                 "previous": None,
@@ -277,10 +276,10 @@ get_topics_dictionary_response = {
 
 post_topics_dictionary_response = {
     201: openapi.Response(
-        description= 'A new Topic is created.',
+        description='A new Topic is created.',
         schema=TopicsSerializer,
         examples={
-            'application/json':{
+            'application/json': {
                 "creator": {
                     "id": 2,
                     "first_name": "جعفر",
@@ -341,8 +340,8 @@ post_topic_dictionary_request_body = openapi.Schema(
                 description='The id\'s of new supporters',
                 items=openapi.Schema(
                     type=openapi.TYPE_INTEGER
+                )
             )
-        )
     }
 )
 
