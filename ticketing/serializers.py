@@ -130,7 +130,7 @@ class MessageSerializer(serializers.ModelSerializer):
         instance = super().create(validated_data)
         for attachment in attachments:
             Attachment.objects.create(attachmentfile=attachment, message=instance)
-        if instance.user in instance.ticket.topic.supporters.all():
+        if instance.user in instance.ticket.topic.supporters.all() or instance.user == instance.ticket.topic.creator:
             instance.ticket.status = ANSWERED
         else:
             instance.ticket.status = WAITING_FOR_ANSWER
