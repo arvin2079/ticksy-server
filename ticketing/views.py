@@ -147,7 +147,7 @@ class TicketRetriveAPIView(generics.RetrieveAPIView):
 
 class MessageListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = MessageSerializer
-    permission_classes = [IsAuthenticated, IsIdentified, IsTicketOwnerOrTopicOwner]
+    permission_classes = [IsAuthenticated, IsTicketOwnerOrTopicOwner]
     pagination_class = None
     http_method_names = ['get', 'post']
 
