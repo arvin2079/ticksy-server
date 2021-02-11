@@ -2,7 +2,6 @@ from datetime import datetime
 from rest_framework import permissions
 from users.models import IDENTIFIED
 from rest_framework import status
-from rest_framework.permissions import SAFE_METHODS
 
 
 class IsIdentified(permissions.BasePermission):
@@ -13,7 +12,8 @@ class IsIdentified(permissions.BasePermission):
         user = request.user
         if not hasattr(user, 'identity'):
             return False
-        return (user.identity.status == IDENTIFIED and (user.identity.expire_time > datetime.now() if user.identity.expire_time else True)) or user.is_superuser
+        return (user.identity.status == IDENTIFIED and (
+            user.identity.expire_time > datetime.now() if user.identity.expire_time else True)) or user.is_superuser
 
 
 class IsOwner(permissions.BasePermission):
@@ -45,4 +45,5 @@ class IsSupporterOrOwnerOrTicketCreator(permissions.BasePermission):
         user = request.user
         ticket = obj.ticket
         topic = ticket.topic
-        return (((user == topic.creator or user in topic.supporters) and obj.user == ticket.creator) or (user == ticket.creator and (obj.user == topic.creator or obj.user in topic.supporters)))
+        return (((user == topic.creator or user in topic.supporters) and obj.user == ticket.creator) or (
+                    user == ticket.creator and (obj.user == topic.creator or obj.user in topic.supporters)))
