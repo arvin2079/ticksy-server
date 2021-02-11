@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import TopicListCreateAPIView, TopicRetrieveUpdateDestroyAPIView, EmailListAPIView, TicketListCreateAPIView, \
-    MessageListCreateAPIView, MessageUpdateAPIView, GetRecommendedTopicsAPIView, TicketListAPIView
+    MessageListCreateAPIView, MessageUpdateAPIView, GetRecommendedTopicsAPIView, TicketListAPIView, TicketRetriveAPIView
 
 urlpatterns = [
     path('topics/', TopicListCreateAPIView.as_view(), name='topic-list-create'),
@@ -8,6 +8,7 @@ urlpatterns = [
     path('topics/<slug:slug>/tickets/', TicketListCreateAPIView.as_view(), name='ticket-list-create'),
     path('tickets/', TicketListAPIView.as_view(), name='ticket-list'),
     path('tickets/<int:id>/', MessageListCreateAPIView.as_view(), name='message-list-create'),
+    path('tickets/<int:id>/get-detail/', TicketRetriveAPIView.as_view(), name='ticket-detail'),
     path('message/<int:id>/', MessageUpdateAPIView.as_view(), name='message-rate-update'),
     path('email/', EmailListAPIView.as_view(), name='email-list'),
     path('get-recommended-topics/', GetRecommendedTopicsAPIView.as_view(), name='recommended-topics-list')

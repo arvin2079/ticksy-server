@@ -36,7 +36,7 @@ class TopicListCreateAPIView(generics.ListCreateAPIView):
 
 class TopicRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TopicSerializer
-    permission_classes = [IsAuthenticated, IsIdentified]
+    permission_classes = [IsAuthenticated]
     lookup_field = 'slug'
     http_method_names = ['get', 'patch', 'delete']
 
@@ -135,6 +135,14 @@ class TicketListCreateAPIView(generics.ListCreateAPIView):
     def get_queryset(self):
         return Ticket.objects.filter(Q(topic__slug=self.kwargs.get('slug')) & (
                     Q(topic__creator=self.request.user) | Q(topic__supporters__in=[self.request.user])))
+
+
+class TicketRetriveAPIView(generics.RetrieveAPIView):
+    serializer_class = TicketSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return Ticket.objects.filter(id=self.kwargs.get('id')).first()
 
 
 class MessageListCreateAPIView(generics.ListCreateAPIView):
