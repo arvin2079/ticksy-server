@@ -414,7 +414,8 @@ post_ticket_dictionary_response = {
                 },
                 "title": "new title",
                 "status": "1",
-                "priority": "1"
+                "priority": "1",
+                "tags": "A string contains tags that separated by something"
             }
         }
     ),
@@ -436,6 +437,10 @@ post_ticket_dictionary_request_body = openapi.Schema(
         'text': openapi.Schema(
             type=openapi.TYPE_STRING,
             description='Message of user for describing what the problem is'
+        ),
+        'tags': openapi.Schema(
+            type=openapi.TYPE_STRING,
+            description='A string contains tags that separated by something'
         ),
         'attachments': openapi.Schema(
             type=openapi.TYPE_ARRAY,

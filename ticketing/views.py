@@ -36,7 +36,7 @@ class TopicListCreateAPIView(generics.ListCreateAPIView):
 
 class TopicRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TopicSerializer
-    permission_classes = [IsAuthenticated, IsIdentified, IsOwner]
+    permission_classes = [IsAuthenticated, IsIdentified]
     lookup_field = 'slug'
     http_method_names = ['get', 'patch', 'delete']
 

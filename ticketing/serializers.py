@@ -87,7 +87,7 @@ class TicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
         fields = ['id', 'creator', 'title', 'status', 'priority', 'text', 'attachments', 'last_update', 'creation_date',
-                  'url']
+                  'url', 'tags']
         read_only_fields = ['id', 'creator', 'topic', 'status']
         extra_kwargs = {
             'url': {'view_name': 'message-list-create', 'lookup_field': 'id'}

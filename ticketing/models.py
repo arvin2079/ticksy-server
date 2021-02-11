@@ -86,6 +86,7 @@ class Ticket(models.Model):
     last_update = models.DateTimeField(auto_now=True, verbose_name='زمان آخرین تغییرات')
     priority = models.CharField(choices=PRIORITY_CHOICES, verbose_name='اولویت', max_length=1)
     topic = models.ForeignKey(Topic, on_delete=models.PROTECT, verbose_name='بخش مربوطه')
+    tags = models.TextField('تگ ها', blank=True, default='')
 
     def __str__(self):
         return self.title
