@@ -131,7 +131,7 @@ class TicketListCreateAPIView(generics.ListCreateAPIView):
 
     def get(self, request, *args, **kwargs):
         # todo: validate user
-        super(TicketListCreateAPIView, self).get(request, *args, **kwargs)
+        return super(TicketListCreateAPIView, self).get(request, *args, **kwargs)
 
     def get_queryset(self):
         return Ticket.objects.filter(Q(topic__slug=self.kwargs.get('slug')) & (
