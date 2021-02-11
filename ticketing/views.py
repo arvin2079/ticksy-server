@@ -117,7 +117,7 @@ class TicketListAPIView(generics.ListAPIView):
 
 class TicketListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = TicketSerializer
-    permission_classes = [IsAuthenticated, IsIdentified]
+    permission_classes = [IsAuthenticated]
     search_fields = ['id', 'title']
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     filterset_class = TicketFilter
