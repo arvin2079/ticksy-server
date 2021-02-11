@@ -81,7 +81,7 @@ class AttachmentSerializer(serializers.ModelSerializer):
 
 class TicketSerializer(serializers.ModelSerializer):
     text = serializers.CharField(write_only=True)
-    attachments = serializers.ListField(child=serializers.FileField(), write_only=True)
+    attachments = serializers.ListField(child=serializers.FileField(), write_only=True, required=False)
     creator = UserSerializerRestricted(read_only=True)
 
     class Meta:
@@ -96,9 +96,8 @@ class TicketSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context['request'].user
         text = validated_data['text']
-        attachments = validated_data['attachments']
+        attachments = validated_data.pop('attachments', [])
         validated_data.pop('text')
-        validated_data.pop('attachments')
         validated_data['creator'] = user
         validated_data['topic'] = Topic.objects.get(slug=self.context.get('view').kwargs.get('slug'))
         instance = super().create(validated_data)
