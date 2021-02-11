@@ -87,13 +87,11 @@ class EmailListAPIView(generics.ListAPIView):
         return self.list(request, *args, **kwargs)
 
     def get_queryset(self):
-        start_date = timezone.now()
-        end_date = start_date + timedelta(weeks=48 * 4)  # 4 years
-        return User.objects.filter(
-            Q(identity__expire_time__range=[start_date, end_date]) & Q(identity__status=IDENTIFIED) & Q(
-                is_staff=True)).distinct().order_by('-email')
+        return User.objects.filter(Q(identity__status=IDENTIFIED) & (
+                Q(identity__expire_time__isnull=True) | Q(
+            identity__expire_time__gt=timezone.now()))).distinct().order_by('-email')
 
-    def list(self, request):
+    def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         queryset = queryset[:10]
         serializer = self.get_serializer(queryset, many=True)
@@ -118,7 +116,7 @@ class TicketListAPIView(generics.ListAPIView):
         return Ticket.objects.filter(creator=self.request.user)
 
 
-class TicketCreateAPIView(generics.CreateAPIView):
+class TicketListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = TicketSerializer
     permission_classes = [IsAuthenticated, IsIdentified]
 
@@ -127,6 +125,14 @@ class TicketCreateAPIView(generics.CreateAPIView):
         responses=post_ticket_dictionary_response, request_body=post_ticket_dictionary_request_body)
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        # todo: validate user
+        super(TicketListCreateAPIView, self).get(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return Ticket.objects.filter(Q(topic__slug=self.kwargs.get('slug')) & (
+                    Q(topic__creator=self.request.user) | Q(topic__supporters__in=[self.request.user])))
 
 
 class MessageListCreateAPIView(generics.ListCreateAPIView):
