@@ -87,11 +87,8 @@ class EmailListAPIView(generics.ListAPIView):
         return self.list(request, *args, **kwargs)
 
     def get_queryset(self):
-        start_date = timezone.now()
-        end_date = start_date + timedelta(weeks=48 * 4)  # 4 years
-        return User.objects.filter(
-            Q(identity__expire_time__range=[start_date, end_date]) & Q(identity__status=IDENTIFIED) & Q(
-                is_staff=True)).distinct().order_by('-email')
+        return User.objects.filter(Q(identity__status=IDENTIFIED) & (
+                Q(identity__expire_time__isnull=True) | Q(identity__expire_time__gt=timezone.now()))).distinct().order_by('-email')
 
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
