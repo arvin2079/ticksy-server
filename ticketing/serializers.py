@@ -54,7 +54,7 @@ class TopicSerializer(TopicsSerializer):
     class Meta:
         model = Topic
         fields = ['id', 'creator', 'role', 'title', 'description', 'url', 'avatar', 'supporters', 'supporters_ids']
-        read_only_fields = ['id', 'creator', 'role', 'is_active', 'title', 'supporters', 'url']
+        read_only_fields = ['id', 'creator', 'role', 'is_active', 'supporters', 'url']
         lookup_field = 'slug'
         extra_kwargs = {
             'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'slug'}
@@ -63,6 +63,8 @@ class TopicSerializer(TopicsSerializer):
     def update(self, instance, validated_data):
         if 'description' in validated_data:
             instance.description = validated_data['description']
+        if 'title' in validated_data:
+            instance.title = validated_data['title']
         if 'avatar' in validated_data:
             instance.avatar = validated_data['avatar']
         if 'supporters' in validated_data:
