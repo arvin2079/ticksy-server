@@ -119,6 +119,9 @@ class TicketListAPIView(generics.ListAPIView):
 class TicketListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = TicketSerializer
     permission_classes = [IsAuthenticated, IsIdentified]
+    search_fields = ['id', 'title']
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
+    filterset_class = TicketFilter
 
     @swagger_auto_schema(
         operation_description='Creates a new Ticket and relates it to the Topic that It\'s slug is inserted in the url.\nmethod: POST\nurl: /topics/\<slug\>/tickets/\nexample: /topics/amoozesh-khu/tickets/',
