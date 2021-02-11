@@ -53,8 +53,7 @@ class TopicRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
         return self.partial_update(request, *args, **kwargs)
 
     def get_queryset(self):
-        return Topic.objects.filter(
-            (Q(creator=self.request.user) | Q(supporters__in=[self.request.user])) & Q(is_active=True)).distinct()
+        return Topic.objects.filter(is_active=True).distinct()
 
     def get_object(self):
         queryset = self.filter_queryset(self.get_queryset())
