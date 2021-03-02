@@ -1,4 +1,3 @@
-
 # Created by https://www.toptal.com/developers/gitignore/api/django,pycharm,visualstudiocode,venv,virtualenv
 # Edit at https://www.toptal.com/developers/gitignore?templates=django,pycharm,visualstudiocode,venv,virtualenv
 
@@ -273,11 +272,7 @@ pip-selfcheck.json
 # http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
 
 ### VisualStudioCode ###
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+.vscode
 *.code-workspace
 
 ### VisualStudioCode Patch ###
