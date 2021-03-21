@@ -18,4 +18,4 @@ RUN export LC_ALL="fa_IR.UTF-8"
 
 RUN pip install -r requirements.txt
 
-ENTRYPOINT [ "/src/entrypoint.sh" ]
+ENTRYPOINT [ "/app/entrypoint.sh" ]
