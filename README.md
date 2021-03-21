@@ -12,13 +12,13 @@
     
     'USER': 'ticksy'
     
-    'PASSWORD': 'ticksy_1234'
+    'PASSWORD': 'Ticksy_1234'
     
     - Set the **Charset to utf8mb4**, and **Collaction to utf8mb4_general** when creating database in mysql.
 
 ##### **3.1. for convenience :**
 
-    CREATE USER 'ticksy'@'%' IDENTIFIED BY 'ticksy_1234';
+    CREATE USER 'ticksy'@'%' IDENTIFIED BY 'Ticksy_1234';
     
     GRANT ALL PRIVILEGES ON *.* TO 'ticksy'@'%';
     
