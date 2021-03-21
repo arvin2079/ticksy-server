@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
+import locale
 import os
 from pathlib import Path
 
@@ -21,12 +22,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY", '--qk8vealh#!_049a!qx7h=z+ox+ow4mo@s6+_lw-kvp^o93q8')
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY", '--qk8vealh#!_049a!qx7h=z+ox+ow4mo@s6+_lw-kvp^o93q8')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", '').split(" ") if os.environ.get("DJANGO_ALLOWED_HOSTS", '') else []
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", '').split(
+    " ") if os.environ.get("DJANGO_ALLOWED_HOSTS", '') else []
 
 
 # Application definition
@@ -162,7 +165,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'fa-ir'
 
-import locale
 
 locale.setlocale(locale.LC_ALL, "fa_IR.UTF-8")
 
@@ -190,9 +192,9 @@ MEDIA_URL = '/media/'
 
 # checklist for production : STATIC_ROOT, MEDIA_ROOT, DEBUG, ALLOWED_HOSTS, Database
 
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'mail.margay.ir')
-EMAIL_PORT =  int(os.environ.get('EMAIL_PORT', '587'))
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'no-reply-khu@margay.ir')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'mail.markop.ir')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'no-reply-khu@markop.ir')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'fuw9MUM7rir!lunk')
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", 'False').lower() in ['true', '1']
 # EMAIL_USE_SSL = True
