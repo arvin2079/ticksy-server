@@ -20,13 +20,13 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'code', 'avatar', 'date_joined', 'is_identified']
+        fields = ['id', 'first_name', 'last_name', 'email',
+                  'code', 'avatar', 'date_joined', 'is_identified']
 
     def get_is_identified(self, obj):
         if not hasattr(obj, 'identity'):
             return False
         return obj.identity.status == IDENTIFIED
-
 
 
 class SignupSerializer(serializers.Serializer):
@@ -49,7 +49,8 @@ class SignupSerializer(serializers.Serializer):
         request = self.context['request']
         email = validated_data['email']
 
-        user = User.objects.create_user(validated_data.pop('email'), validated_data.pop('password'), **validated_data)
+        user = User.objects.create_user(validated_data.pop(
+            'email'), validated_data.pop('password'), **validated_data)
         user.is_active = False
         user.save()
 
@@ -57,14 +58,16 @@ class SignupSerializer(serializers.Serializer):
         token = token_generator.make_token(user)
         # relative_link = reverse('users:email_activation',
         #                         request=request, kwargs={'uib64': uib64, 'token': token})
-        relative_link = 'http://ticksy.margay.ir/confirm-email/?uib64={0}&token={1}'.format(uib64, token)
+        relative_link = 'http://ticksy.markop.ir/confirm-email/?uib64={0}&token={1}'.format(
+            uib64, token)
 
         email_title = 'TickSy Email Verification'
-        email_body = 'hello\nuse this link below to verify your email address\n{link}'.format(link=relative_link)
+        email_body = 'hello\nuse this link below to verify your email address\n{link}'.format(
+            link=relative_link)
         send_mail(
             email_title,  # title
             email_body,  # body
-            'no-reply-khu@margay.ir',  # from
+            'no-reply-khu@markop.ir',  # from
             [email, ],  # to
         )
         return user
@@ -83,7 +86,8 @@ class SignupSerializer(serializers.Serializer):
         user = User.objects.filter(email=email)
         if user.exists():
             if user.first().is_active:
-                raise serializers.ValidationError('یوزر با این ایمیل از قبل موجود می باشد!')
+                raise serializers.ValidationError(
+                    'یوزر با این ایمیل از قبل موجود می باشد!')
             else:
                 user.delete()
         return attrs
@@ -131,15 +135,17 @@ class ResetPasswordRequestSerializer(serializers.Serializer):
 
         # relative_link = reverse('users:reset_password_confirm_credential',
         #                         request=request, kwargs={'uib64': uib64, 'token': token})
-        relative_link = 'http://ticksy.margay.ir/confirm-reset-password/?uib64={0}&token={1}'.format(uib64, token)
+        relative_link = 'http://ticksy.markop.ir/confirm-reset-password/?uib64={0}&token={1}'.format(
+            uib64, token)
 
         email_title = 'change password link for TickSy'
-        email_body = 'hello\nuse this link below to reset your password\n{link}'.format(link=relative_link)
+        email_body = 'hello\nuse this link below to reset your password\n{link}'.format(
+            link=relative_link)
 
         send_mail(
             email_title,  # title
             email_body,  # body
-            'no-reply-khu@margay.ir',  # from
+            'no-reply-khu@markop.ir',  # from
             [email, ],  # to
         )
 

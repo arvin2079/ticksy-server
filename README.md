@@ -2,7 +2,7 @@
 
 ## Get Start :
 
-#### **1. git clone https://gitlab.margay.ir/Ticksy/ticksy_server.git** (terminal)
+#### **1. git clone https://gitlab.markop.ir/Ticksy/ticksy_server.git** (terminal)
 
 #### **2. pip install -r requirements.txt** (terminal, with active virtualenv)
 
