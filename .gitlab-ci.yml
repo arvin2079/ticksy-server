@@ -1,4 +1,4 @@
-image: docker:stable
+image: docker/compose:latest
 
 stages:
   - deploy
@@ -6,9 +6,7 @@ stages:
 deploy:
   stage: deploy
   script:
-    - rm -rf /temp/*
-    - cp -rT ./ /temp
-    - docker-compose up -d --force-recreate
+    - docker-compose up -d --force-recreate --build
   tags:
     - KhuServer
   only:
