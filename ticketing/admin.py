@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Topic, Ticket, Message, Attachment
+from .models import Topic, Ticket, Message, Attachment, TicketHistory, Section, Admin
 
 
 class AttachInline(admin.TabularInline):
@@ -13,21 +13,40 @@ class MessageInline(admin.StackedInline):
     show_change_link = True
 
 
+class AdminAdmin(admin.ModelAdmin):
+    list_display = ['title', 'topic']
+    search_fields = ['title']
+    autocomplete_fields = ['topic']
+
 class TopicAdmin(admin.ModelAdmin):
     list_display = ('title', 'slug', 'creator')
     search_fields = ['title', 'description', 'slug', 'creator']
     list_filter = []
-    filter_horizontal = ['supporters']
+    filter_horizontal = ['supporters', 'admins']
     autocomplete_fields = ['creator']
+
+class SectionAdmin(admin.ModelAdmin):
+    list_display = ['title', 'topic', 'admin', 'slug']
+    search_fields = ['title', 'description', 'slug']
+    list_filter = ['topic']
+    autocomplete_fields = ['topic', 'admin']
 
 
 class TicketAdmin(admin.ModelAdmin):
-    list_display = ('title', 'get_status_display', 'get_priority_display', 'last_update')
+    list_display = ('title', 'section', 'admin', 'get_status_display', 'get_priority_display', 'last_update')
     search_fields = ['title', 'creator']
     list_filter = ['status', 'priority', 'creation_date', 'last_update', 'topic']
     readonly_fields = ['creation_date', 'last_update']
     inlines = [MessageInline]
-    autocomplete_fields = ['creator', 'topic']
+    autocomplete_fields = ['creator', 'topic', 'section']
+
+
+class TicketHistoryAdmin(admin.ModelAdmin):
+    list_display = ['ticket', 'admin', 'section', 'operator', 'date']
+    search_fields = ['ticket', 'section', 'operator']
+    list_filter = []
+    readonly_fields = ['date']
+    autocomplete_fields = ['ticket', 'admin', 'section', 'operator']
 
 
 class MessageAdmin(admin.ModelAdmin):
@@ -47,4 +66,7 @@ admin.site.register(Topic, TopicAdmin)
 admin.site.register(Ticket, TicketAdmin)
 admin.site.register(Message, MessageAdmin)
 admin.site.register(Attachment)
+admin.site.register(TicketHistory, TicketHistoryAdmin)
+admin.site.register(Section, SectionAdmin)
+admin.site.register(Admin, AdminAdmin)
 # admin.site.register(Attachment, AttachmentAdmin)

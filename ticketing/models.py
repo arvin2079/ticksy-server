@@ -12,6 +12,10 @@ def topic_image_directory_path(instance, filename):
     return 'topic/{0}/image/{1}'.format(instance.slug, filename)
 
 
+def section_image_directory_path(instance, filename):
+    return 'section/{0}/image/{1}'.format(instance.slug, filename)
+
+
 def user_files_directory_path(instance, filename):
     return 'user/{0}/files/{1}'.format(str(instance.message.user.email)[0:str(instance.message.user.email).index('@')],
                                        filename)
@@ -23,13 +27,28 @@ def validate_image_size(image):
         raise ValidationError('حداکثر سایز عکس باید {} باشد'.format((filesizeformat(settings.MAX_UPLOAD_IMAGE_SIZE))))
 
 
+class Admin(models.Model):
+    title = models.CharField(max_length=100, verbose_name='عنوان')
+    topic = models.ForeignKey(to='ticketing.Topic', on_delete=models.PROTECT)
+    users = models.ManyToManyField(to=User, blank=True, verbose_name='ادمین ها')
+
+    def __str__(self):
+        return self.title
+    
+    class Meta:
+        ordering = ['title']
+        verbose_name = 'ادمین'
+        verbose_name_plural = 'ادمین ها'
+
+
+VALID_AVATAR_EXTENSION = ['png', 'jpg', 'jpeg']
+
 class Topic(models.Model):
-    VALID_AVATAR_EXTENSION = ['png', 'jpg', 'jpeg']
     creator = models.ForeignKey(User, related_name='created_topics', null=True, on_delete=models.PROTECT,
                                 verbose_name='سازنده')
     title = models.CharField(max_length=100, verbose_name='عنوان')
     description = models.TextField(verbose_name='توضیحات', null=True, blank=True)
-    slug = models.SlugField(max_length=30, null=False, unique=True, verbose_name='تگ آدرس', validators=[validate_slug],
+    slug = models.SlugField(max_length=30, unique=True, verbose_name='تگ آدرس', validators=[validate_slug],
                             help_text='نام اینگلیسی مناسب برای لینک (به جای فاصله از خط تیره استفاده کنید)')
     is_active = models.BooleanField(verbose_name='فعال', default=True,
                                     help_text='به جای حذف بخش، این گزینه را غیر فعال کنید')
@@ -42,6 +61,7 @@ class Topic(models.Model):
     is_recommended = models.BooleanField(verbose_name='پیشنهادی', default=False,
                                          help_text='در صورت فعال بودن این گزینه آدرس بخش مورد نظر در صفحه اصلی نمایش '
                                                    'داده خواهد شد')
+    admins = models.ManyToManyField(to=Admin, blank=True, verbose_name='ادمین ها', related_name='admins')
 
     def __str__(self):
         return self.title
@@ -78,6 +98,30 @@ PRIORITY_CHOICES = [
 ]
 
 
+
+
+class Section(models.Model):
+    topic = models.ForeignKey(to=Topic, on_delete=models.PROTECT, verbose_name='تاپیک')
+    admin = models.ForeignKey(to=Admin, on_delete=models.PROTECT, verbose_name='ادمین ها')
+    title = models.CharField(max_length=100, verbose_name='عنوان')
+    description = models.TextField(verbose_name='توضیحات', null=True, blank=True)
+    slug = models.SlugField(max_length=30, unique=True, verbose_name='تگ آدرس', validators=[validate_slug],
+                            help_text='نام اینگلیسی مناسب برای لینک (به جای فاصله از خط تیره استفاده کنید)')
+    avatar = models.FileField(upload_to=section_image_directory_path, null=True, blank=True,
+                              validators=[FileExtensionValidator(VALID_AVATAR_EXTENSION), validate_image_size],
+                              verbose_name='آواتار',
+                              help_text='حداکثر سایز عکس باید {} باشد'.format(
+                                  filesizeformat(settings.MAX_UPLOAD_IMAGE_SIZE)))
+    
+    def __str__(self):
+        return self.title
+    
+    class Meta:
+        ordering = ['title']
+        verbose_name = ' بحش'
+        verbose_name_plural = 'بخش ها'
+
+
 class Ticket(models.Model):
     creator = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name='سازنده')
     title = models.CharField(max_length=100, verbose_name='عنوان')
@@ -85,6 +129,8 @@ class Ticket(models.Model):
     status = models.CharField(choices=STATUS_CHOICES, default=WAITING_FOR_ANSWER, verbose_name='وضعیت', max_length=1)
     last_update = models.DateTimeField(auto_now=True, verbose_name='زمان آخرین تغییرات')
     priority = models.CharField(choices=PRIORITY_CHOICES, verbose_name='اولویت', max_length=1)
+    section = models.ForeignKey(to=Section, on_delete=models.PROTECT, verbose_name='بخش')
+    admin = models.ForeignKey(to=Admin, on_delete=models.PROTECT, verbose_name='ادمین ها')
     topic = models.ForeignKey(Topic, on_delete=models.PROTECT, verbose_name='بخش مربوطه')
     tags = models.TextField('تگ ها', blank=True, default='')
 
@@ -95,6 +141,22 @@ class Ticket(models.Model):
         ordering = ['-last_update']
         verbose_name = 'تیکت'
         verbose_name_plural = 'تیکت ها'
+
+
+class TicketHistory(models.Model):
+    ticket = models.ForeignKey(to=Ticket, on_delete=models.PROTECT, verbose_name='تیکت')
+    admin = models.ForeignKey(to=Admin, on_delete=models.PROTECT, verbose_name='ادمین')
+    section = models.ForeignKey(to=Section, on_delete=models.PROTECT, verbose_name='بخش')
+    operator = models.ForeignKey(to=User, on_delete=models.PROTECT, verbose_name='اپراتور')
+    date = models.DateTimeField(verbose_name='زمان', auto_now_add=True)
+
+    def __str__(self):
+        return self.id
+    
+    class Meta:
+        ordering = ['-date']
+        verbose_name = 'تیکت بایگانی شده'
+        verbose_name_plural = 'تیکت های بایگانی شده'
 
 
 class Message(models.Model):
