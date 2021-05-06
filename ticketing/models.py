@@ -68,8 +68,8 @@ class Topic(models.Model):
 
     class Meta:
         ordering = ['title']
-        verbose_name = 'بخش'
-        verbose_name_plural = 'بخش ها'
+        verbose_name = 'موضوع'
+        verbose_name_plural = 'موضوع ها'
 
 
 @receiver(pre_delete, sender=Topic)
@@ -96,8 +96,6 @@ PRIORITY_CHOICES = [
     (AVERAGE, 'اولویت متوسط'),
     (LOW, 'اولویت کم')
 ]
-
-
 
 
 class Section(models.Model):
