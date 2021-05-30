@@ -68,8 +68,8 @@ class Topic(models.Model):
 
     class Meta:
         ordering = ['title']
-        verbose_name = 'موضوع'
-        verbose_name_plural = 'موضوع ها'
+        verbose_name = 'بخش'
+        verbose_name_plural = 'بخش ها'
 
 
 @receiver(pre_delete, sender=Topic)
@@ -99,12 +99,14 @@ PRIORITY_CHOICES = [
 
 
 class Section(models.Model):
-    topic = models.ForeignKey(to=Topic, on_delete=models.PROTECT, verbose_name='تاپیک')
-    admin = models.ForeignKey(to=Admin, on_delete=models.PROTECT, verbose_name='ادمین ها')
+    topic = models.ForeignKey(to=Topic, on_delete=models.PROTECT, verbose_name='متعلق به بخش')
+    admin = models.ForeignKey(to=Admin, on_delete=models.PROTECT, verbose_name='گروه مسئولین های این زیربخش')
     title = models.CharField(max_length=100, verbose_name='عنوان')
     description = models.TextField(verbose_name='توضیحات', null=True, blank=True)
     slug = models.SlugField(max_length=30, unique=True, verbose_name='تگ آدرس', validators=[validate_slug],
                             help_text='نام اینگلیسی مناسب برای لینک (به جای فاصله از خط تیره استفاده کنید)')
+    is_active = models.BooleanField(verbose_name='فعال', default=True,
+                                    help_text='به جای حذف زیر بخش، این گزینه را غیر فعال کنید')
     avatar = models.FileField(upload_to=section_image_directory_path, null=True, blank=True,
                               validators=[FileExtensionValidator(VALID_AVATAR_EXTENSION), validate_image_size],
                               verbose_name='آواتار',
@@ -116,8 +118,8 @@ class Section(models.Model):
     
     class Meta:
         ordering = ['title']
-        verbose_name = ' بحش'
-        verbose_name_plural = 'بخش ها'
+        verbose_name = 'زیر بخش'
+        verbose_name_plural = 'زیر بخش ها'
 
 
 class Ticket(models.Model):
@@ -127,7 +129,7 @@ class Ticket(models.Model):
     status = models.CharField(choices=STATUS_CHOICES, default=WAITING_FOR_ANSWER, verbose_name='وضعیت', max_length=1)
     last_update = models.DateTimeField(auto_now=True, verbose_name='زمان آخرین تغییرات')
     priority = models.CharField(choices=PRIORITY_CHOICES, verbose_name='اولویت', max_length=1)
-    section = models.ForeignKey(to=Section, on_delete=models.PROTECT, verbose_name='بخش')
+    section = models.ForeignKey(to=Section, on_delete=models.PROTECT, verbose_name='زیر بخش مربوطه')
     admin = models.ForeignKey(to=Admin, on_delete=models.PROTECT, verbose_name='ادمین ها')
     topic = models.ForeignKey(Topic, on_delete=models.PROTECT, verbose_name='بخش مربوطه')
     tags = models.TextField('تگ ها', blank=True, default='')
@@ -144,17 +146,17 @@ class Ticket(models.Model):
 class TicketHistory(models.Model):
     ticket = models.ForeignKey(to=Ticket, on_delete=models.PROTECT, verbose_name='تیکت')
     admin = models.ForeignKey(to=Admin, on_delete=models.PROTECT, verbose_name='ادمین')
-    section = models.ForeignKey(to=Section, on_delete=models.PROTECT, verbose_name='بخش')
-    operator = models.ForeignKey(to=User, on_delete=models.PROTECT, verbose_name='اپراتور')
-    date = models.DateTimeField(verbose_name='زمان', auto_now_add=True)
+    section = models.ForeignKey(to=Section, on_delete=models.PROTECT, verbose_name='زیر بخش')
+    operator = models.ForeignKey(to=User, on_delete=models.PROTECT, verbose_name='ادمین مسئول')
+    date = models.DateTimeField(verbose_name='زمان ایجاد', auto_now_add=True)
 
     def __str__(self):
         return self.id
     
     class Meta:
         ordering = ['-date']
-        verbose_name = 'تیکت بایگانی شده'
-        verbose_name_plural = 'تیکت های بایگانی شده'
+        verbose_name = 'تاریخچه عملکرد یک تیکت'
+        verbose_name_plural = 'تاریخچه های عملکرد یک تیکت'
 
 
 class Message(models.Model):
