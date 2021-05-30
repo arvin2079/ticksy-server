@@ -1,4 +1,4 @@
-from django.core.validators import validate_slug, MaxValueValidator, MinValueValidator, FileExtensionValidator, \
+from django.core.validators import MaxValueValidator, MinValueValidator, FileExtensionValidator, \
     ValidationError
 from django.template.defaultfilters import filesizeformat
 from django.db.models.signals import pre_delete
@@ -9,11 +9,11 @@ from users.models import User
 
 
 def topic_image_directory_path(instance, filename):
-    return 'topic/{0}/image/{1}'.format(instance.slug, filename)
+    return 'topic/{0}/image/{1}'.format(instance.id, filename)
 
 
 def section_image_directory_path(instance, filename):
-    return 'section/{0}/image/{1}'.format(instance.slug, filename)
+    return 'section/{0}/image/{1}'.format(instance.id, filename)
 
 
 def user_files_directory_path(instance, filename):
@@ -48,8 +48,6 @@ class Topic(models.Model):
                                 verbose_name='سازنده')
     title = models.CharField(max_length=100, verbose_name='عنوان')
     description = models.TextField(verbose_name='توضیحات', null=True, blank=True)
-    slug = models.SlugField(max_length=30, unique=True, verbose_name='تگ آدرس', validators=[validate_slug],
-                            help_text='نام اینگلیسی مناسب برای لینک (به جای فاصله از خط تیره استفاده کنید)')
     is_active = models.BooleanField(verbose_name='فعال', default=True,
                                     help_text='به جای حذف بخش، این گزینه را غیر فعال کنید')
     avatar = models.FileField(upload_to=topic_image_directory_path, null=True, blank=True,
@@ -57,11 +55,9 @@ class Topic(models.Model):
                               verbose_name='آواتار',
                               help_text='حداکثر سایز عکس باید {} باشد'.format(
                                   filesizeformat(settings.MAX_UPLOAD_IMAGE_SIZE)))
-    supporters = models.ManyToManyField(User, blank=True, related_name='supported_topics', verbose_name='پشتیبانان')
     is_recommended = models.BooleanField(verbose_name='پیشنهادی', default=False,
                                          help_text='در صورت فعال بودن این گزینه آدرس بخش مورد نظر در صفحه اصلی نمایش '
                                                    'داده خواهد شد')
-    admins = models.ManyToManyField(to=Admin, blank=True, verbose_name='ادمین ها', related_name='admins')
 
     def __str__(self):
         return self.title
@@ -103,8 +99,6 @@ class Section(models.Model):
     admin = models.ForeignKey(to=Admin, on_delete=models.PROTECT, verbose_name='گروه مسئولین های این زیربخش')
     title = models.CharField(max_length=100, verbose_name='عنوان')
     description = models.TextField(verbose_name='توضیحات', null=True, blank=True)
-    slug = models.SlugField(max_length=30, unique=True, verbose_name='تگ آدرس', validators=[validate_slug],
-                            help_text='نام اینگلیسی مناسب برای لینک (به جای فاصله از خط تیره استفاده کنید)')
     is_active = models.BooleanField(verbose_name='فعال', default=True,
                                     help_text='به جای حذف زیر بخش، این گزینه را غیر فعال کنید')
     avatar = models.FileField(upload_to=section_image_directory_path, null=True, blank=True,
@@ -155,8 +149,8 @@ class TicketHistory(models.Model):
     
     class Meta:
         ordering = ['-date']
-        verbose_name = 'تاریخچه عملکرد یک تیکت'
-        verbose_name_plural = 'تاریخچه های عملکرد یک تیکت'
+        verbose_name = 'تاریخچه تغییر وضعیت تیکت'
+        verbose_name_plural = 'تاریخچه تغییر وضعیت های تیکت ها'
 
 
 class Message(models.Model):

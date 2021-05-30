@@ -19,15 +19,15 @@ class AdminAdmin(admin.ModelAdmin):
     autocomplete_fields = ['topic']
 
 class TopicAdmin(admin.ModelAdmin):
-    list_display = ('title', 'slug', 'creator')
-    search_fields = ['title', 'description', 'slug', 'creator']
+    list_display = ('title', 'creator')
+    search_fields = ['title', 'description', 'creator']
     list_filter = []
-    filter_horizontal = ['supporters', 'admins']
+    filter_horizontal = ['admins']
     autocomplete_fields = ['creator']
 
 class SectionAdmin(admin.ModelAdmin):
-    list_display = ['title', 'topic', 'admin', 'slug']
-    search_fields = ['title', 'description', 'slug']
+    list_display = ['title', 'topic', 'admin']
+    search_fields = ['title', 'description']
     list_filter = ['topic']
     autocomplete_fields = ['topic', 'admin']
 
