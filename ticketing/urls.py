@@ -3,9 +3,9 @@ from .views import TopicListCreateAPIView, TopicRetrieveUpdateDestroyAPIView, Em
     MessageListCreateAPIView, MessageUpdateAPIView, GetRecommendedTopicsAPIView, TicketListAPIView, TicketRetriveAPIView
 
 urlpatterns = [
-    path('topics/', TopicListCreateAPIView.as_view(), name='topic-list-create'),
-    path('topics/<slug:slug>/', TopicRetrieveUpdateDestroyAPIView.as_view(), name='topic-retrieve-update-destroy'),
-    path('topics/<slug:slug>/tickets/', TicketListCreateAPIView.as_view(), name='ticket-list-create'),
+    path('topic/', TopicListCreateAPIView.as_view(), name='topic-list-create'),
+    path('topics/<int:id>/', TopicRetrieveUpdateDestroyAPIView.as_view(), name='topic-retrieve-update-destroy'),
+    path('topics/<int:id>/tickets/', TicketListCreateAPIView.as_view(), name='ticket-list-create'),
     path('tickets/', TicketListAPIView.as_view(), name='ticket-list'),
     path('tickets/<int:id>/', MessageListCreateAPIView.as_view(), name='message-list-create'),
     path('tickets/<int:id>/get-detail/', TicketRetriveAPIView.as_view(), name='ticket-detail'),
