@@ -1,6 +1,7 @@
 import datetime
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import send_mail
+from django.core import mail
 from django.utils.encoding import smart_bytes, smart_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.translation import gettext_lazy as _
@@ -64,11 +65,14 @@ class SignupSerializer(serializers.Serializer):
         email_title = 'TickSy Email Verification'
         email_body = 'hello\nuse this link below to verify your email address\n{link}'.format(
             link=relative_link)
+        connection = mail.get_connection(use_tls=True)
+        connection.open()
         send_mail(
             email_title,  # title
             email_body,  # body
             'no-reply-khu@markop.ir',  # from
-            [email, ],  # to
+            [email, ],  # to7
+            connection=connection
         )
         return user
 
@@ -142,11 +146,14 @@ class ResetPasswordRequestSerializer(serializers.Serializer):
         email_body = 'hello\nuse this link below to reset your password\n{link}'.format(
             link=relative_link)
 
+        connection = mail.get_connection(use_tls=True)
+        connection.open()
         send_mail(
             email_title,  # title
             email_body,  # body
             'no-reply-khu@markop.ir',  # from
             [email, ],  # to
+            connection=connection
         )
 
     def validate(self, attrs):
