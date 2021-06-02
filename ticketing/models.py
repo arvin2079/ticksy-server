@@ -1,4 +1,4 @@
-from django.core.validators import validate_slug, MaxValueValidator, MinValueValidator, FileExtensionValidator, \
+from django.core.validators import MaxValueValidator, MinValueValidator, FileExtensionValidator, \
     ValidationError
 from django.template.defaultfilters import filesizeformat
 from django.db.models.signals import pre_delete
@@ -9,11 +9,11 @@ from users.models import User
 
 
 def topic_image_directory_path(instance, filename):
-    return 'topic/{0}/image/{1}'.format(instance.slug, filename)
+    return 'topic/{0}/image/{1}'.format(instance.creator.id, filename)
 
 
 def section_image_directory_path(instance, filename):
-    return 'section/{0}/image/{1}'.format(instance.slug, filename)
+    return 'topic/{0}/section/{1}/image/{2}'.format(instance.topic.creator.id, instance.topic.id, filename)
 
 
 def user_files_directory_path(instance, filename):
@@ -96,7 +96,7 @@ PRIORITY_CHOICES = [
 
 class Section(models.Model):
     topic = models.ForeignKey(to=Topic, on_delete=models.PROTECT, verbose_name='متعلق به بخش')
-    admin = models.ForeignKey(to=Admin, on_delete=models.RESTRICT, verbose_name='گروه مسئولین های این زیربخش')
+    admin = models.ForeignKey(to=Admin, on_delete=models.RESTRICT, verbose_name='گروه مسئولین این زیربخش')
     title = models.CharField(max_length=100, verbose_name='عنوان')
     description = models.TextField(verbose_name='توضیحات', null=True, blank=True)
     is_active = models.BooleanField(verbose_name='فعال', default=True,
