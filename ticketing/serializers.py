@@ -1,6 +1,7 @@
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework import serializers
+from rest_framework.utils import model_meta
 from ticketing.models import Admin, Topic, Ticket, Message, Attachment, ANSWERED, WAITING_FOR_ANSWER
 from users.serializers import UserSerializerRestricted
 from users.models import User, IDENTIFIED
@@ -23,14 +24,10 @@ class TopicsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Topic
         fields = ['id', 'creator', 'role', 'title', 'description', 'admins', 'url', 'avatar']
-        read_only_fields = ['id', 'creator', 'role', 'url']
+        read_only_fields = ['id', 'creator', 'role', 'url', 'admins']
         extra_kwargs = {
             'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'id'}
         }
-
-    def to_internal_value(self, data):
-        self.fields['admins'] = serializers.PrimaryKeyRelatedField(queryset=Admin.objects.filter(Q(topic__creator=self.context['request'].user)), many=True)
-        return super(TopicsSerializer, self).to_internal_value(data)
 
     def get_role(self, obj):
         if self.context['request'].user == obj.creator:
@@ -45,26 +42,8 @@ class TopicsSerializer(serializers.ModelSerializer):
 
 
 class TopicSerializer(TopicsSerializer):
-    class Meta:
-        model = Topic
-        fields = ['id', 'creator', 'role', 'title', 'description', 'url', 'avatar', 'supporters', 'supporters_ids']
-        read_only_fields = ['id', 'creator', 'role', 'is_active', 'supporters', 'url']
+    class Meta(TopicsSerializer.Meta):
         lookup_field = 'id'
-        extra_kwargs = {
-            'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'id'}
-        }
-
-    def update(self, instance, validated_data):
-        if 'description' in validated_data:
-            instance.description = validated_data['description']
-        if 'title' in validated_data:
-            instance.title = validated_data['title']
-        if 'avatar' in validated_data:
-            instance.avatar = validated_data['avatar']
-        if 'supporters' in validated_data:
-            instance.supporters.set(validated_data['supporters'])
-        instance.save()
-        return instance
 
 
 class AttachmentSerializer(serializers.ModelSerializer):

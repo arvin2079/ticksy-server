@@ -36,9 +36,9 @@ class TopicListCreateAPIView(generics.ListCreateAPIView):
 
 class TopicRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TopicSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwner]
     lookup_field = 'id'
-    http_method_names = ['get', 'patch', 'delete']
+    http_method_names = ['get', 'put', 'patch', 'delete']
 
     @swagger_auto_schema(
         operation_description='Searches for a topic and returns the topic that has a slug exactly matched with the url slug(if exist).\nmethod: GET\nurl: /topics/\<slug\>\nexample: /topics/amoozesh-khu',
@@ -53,7 +53,7 @@ class TopicRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
         return self.partial_update(request, *args, **kwargs)
 
     def get_queryset(self):
-        return Topic.objects.filter(is_active=True).distinct()
+        return Topic.objects.filter(Q(is_active=True)).distinct()
 
     def get_object(self):
         queryset = self.filter_queryset(self.get_queryset())
@@ -64,7 +64,7 @@ class TopicRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     @swagger_auto_schema(
         operation_description='Deletes the Topic.\nmethod: DELETE\nurl: /topics/\<slug\>\nexample: /topics/amoozesh-khu',
         responses=delete_topic_dictionary_response)
-    def delete(self, request, slug=None):
+    def delete(self, request, id):
         instance = self.get_object()
         instance.is_active = False
         instance.save()
