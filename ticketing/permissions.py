@@ -21,8 +21,10 @@ class IsOwner(permissions.BasePermission):
     status_code = status.HTTP_403_FORBIDDEN
 
     def has_object_permission(self, request, view, obj):
-        if obj.creator == request.user:
-            return True
+        if 'creator' in dir(obj):
+            return obj.creator == request.user
+        elif 'topic' in dir(obj):
+            return obj.topic.creator == request.user
         return False
 
 
