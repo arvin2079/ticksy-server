@@ -1,4 +1,7 @@
 from datetime import timedelta
+
+from django.core.exceptions import ValidationError
+from ticketing.models import Section
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import add
 from django_filters.rest_framework import DjangoFilterBackend
@@ -66,7 +69,7 @@ class TopicRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class TopicRolesListCreateAPIView(generics.ListCreateAPIView):
+class TopicAdminsListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = TopicAdminsSerializer
     permission_classes = [IsAuthenticated, IsOwner]
     pagination_class = None
@@ -81,6 +84,33 @@ class TopicRolesListCreateAPIView(generics.ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class AdminRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = TopicAdminsSerializer
+    permission_classes = [IsAuthenticated, IsOwner]
+    lookup_field = 'roleid'
+    http_method_names = ['get', 'put', 'patch', 'delete']
+
+    def get_object(self):
+        return get_object_or_404(Admin, id=self.kwargs['roleid'], topic__id=self.kwargs['id'], topic__is_active=True)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial, context={'id': self.kwargs['id'], 'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+    
+    def delete(self, request, id, roleid):
+        instance = self.get_object()
+        if Section.objects.filter(Q(admin=instance)):
+            ValidationError(message={'message': 'نمیتوان این گروه را حذف کرد چون در یک یا چند زیربخش استفاده شده است.'})
+        if Ticket.objects.filter(Q(admin=instance)):
+            ValidationError(message={'message': 'نمیتوان این گروه را حذف کرد چون در یک یا چند تیکت استفاده شده است.'})
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class EmailListAPIView(generics.ListAPIView):
