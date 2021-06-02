@@ -1,7 +1,7 @@
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework import serializers
-from ticketing.models import Admin, Topic, Ticket, Message, Attachment, ANSWERED, WAITING_FOR_ANSWER
+from ticketing.models import Admin, Section, Topic, Ticket, Message, Attachment, ANSWERED, WAITING_FOR_ANSWER
 from users.serializers import UserSerializerRestricted
 from users.models import User, IDENTIFIED
 
@@ -60,6 +60,28 @@ class TopicAdminsSerializer(AdminsFieldSerializer):
     class Meta(AdminsFieldSerializer.Meta):
         fields = ['id', 'title', 'users']
 
+    def create(self, validated_data):
+        validated_data['topic'] = Topic.objects.get(id=self.context['id'])
+        instance = super().create(validated_data)
+        instance.save()
+        return instance
+
+
+class SectionsSerializer(serializers.ModelSerializer):
+
+    def to_internal_value(self, data):
+        self.fields['admin'] = serializers.PrimaryKeyRelatedField(queryset=Admin.objects.filter(Q(topic__id=self.context['id'])))
+        return super().to_internal_value(data)
+
+    def to_representation(self, instance):
+        self.fields['admin'] = AdminsFieldSerializer(read_only=True)
+        return super().to_representation(instance)
+
+    class Meta:
+        model = Section
+        fields = ['id', 'title', 'description', 'admin', 'avatar']
+        read_only_fields = ['id']
+    
     def create(self, validated_data):
         validated_data['topic'] = Topic.objects.get(id=self.context['id'])
         instance = super().create(validated_data)

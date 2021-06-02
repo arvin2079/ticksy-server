@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.core.exceptions import ValidationError
+from django.views import generic
 from ticketing.models import Section
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import add
@@ -111,6 +112,21 @@ class AdminRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
             ValidationError(message={'message': 'نمیتوان این گروه را حذف کرد چون در یک یا چند تیکت استفاده شده است.'})
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SectionListCreateAPIView(generics.ListCreateAPIView):
+    serializer_class = SectionsSerializer
+    permission_classes = [IsAuthenticated, IsOwner]
+    http_method_names = ['get', 'post']
+
+    def get_queryset(self):
+        return Section.objects.filter(Q(topic__id=self.kwargs['id']) & Q(is_active=True))
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, context={'request':request, 'id':self.kwargs['id']})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class EmailListAPIView(generics.ListAPIView):

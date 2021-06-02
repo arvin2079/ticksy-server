@@ -6,6 +6,7 @@ urlpatterns = [
     path('topic/<int:id>/', TopicRetrieveUpdateDestroyAPIView.as_view(), name='topic-retrieve-update-destroy'),
     path('topic/<int:id>/role/', TopicAdminsListCreateAPIView.as_view(), name='topicAdmins-list-create'),
     path('topic/<int:id>/role/<int:roleid>', AdminRetrieveUpdateDestroyAPIView.as_view(), name='role-retrieve-update-destroy'),
+    path('topic/<int:id>/category/', SectionListCreateAPIView.as_view(), name='Section-list-create'),
     path('topics/<int:id>/tickets/', TicketListCreateAPIView.as_view(), name='ticket-list-create'),
     path('tickets/', TicketListAPIView.as_view(), name='ticket-list'),
     path('tickets/<int:id>/', MessageListCreateAPIView.as_view(), name='message-list-create'),
