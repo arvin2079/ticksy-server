@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.core.exceptions import ValidationError
 from django.views import generic
-from ticketing.models import Section
+from ticketing.models import Section, TicketHistory
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import add
 from django_filters.rest_framework import DjangoFilterBackend
@@ -127,6 +127,33 @@ class SectionListCreateAPIView(generics.ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class SectionRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = SectionSerializer
+    permission_classes = [IsAuthenticated, IsOwner]
+    lookup_field = 'secid'
+    http_method_names = ['get', 'put', 'patch', 'delete']
+
+    def get_object(self):
+        return get_object_or_404(Section, id=self.kwargs['secid'], is_active=True)
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial, context={'request': request, 'id': self.kwargs['id']})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if Ticket.objects.filter(Q(section=instance)) or TicketHistory.objects.filter(Q(section=instance)):
+            instance.is_active = False
+            instance.save()
+        else:
+            instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class EmailListAPIView(generics.ListAPIView):

@@ -89,6 +89,22 @@ class SectionsSerializer(serializers.ModelSerializer):
         return instance
 
 
+class SectionSerializer(serializers.ModelSerializer):
+    
+    def to_internal_value(self, data):
+        self.fields['admin'] = serializers.PrimaryKeyRelatedField(queryset=Admin.objects.filter(Q(topic__id=self.context['id'])))
+        return super().to_internal_value(data)
+
+    def to_representation(self, instance):
+        self.fields['admin'] = TopicAdminsSerializer(read_only=True)
+        return super().to_representation(instance)
+
+    class Meta:
+        model = Section
+        fields = ['id', 'title', 'description', 'admin', 'avatar']
+        read_only_fields = ['id']
+
+
 class AttachmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Attachment
