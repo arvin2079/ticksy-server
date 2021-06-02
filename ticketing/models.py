@@ -27,20 +27,6 @@ def validate_image_size(image):
         raise ValidationError('حداکثر سایز عکس باید {} باشد'.format((filesizeformat(settings.MAX_UPLOAD_IMAGE_SIZE))))
 
 
-class Admin(models.Model):
-    title = models.CharField(max_length=100, verbose_name='عنوان')
-    topic = models.ForeignKey(to='ticketing.Topic', on_delete=models.PROTECT)
-    users = models.ManyToManyField(to=User, blank=True, verbose_name='ادمین ها')
-
-    def __str__(self):
-        return self.title
-    
-    class Meta:
-        ordering = ['title']
-        verbose_name = 'ادمین'
-        verbose_name_plural = 'ادمین ها'
-
-
 VALID_AVATAR_EXTENSION = ['png', 'jpg', 'jpeg']
 
 class Topic(models.Model):
@@ -58,7 +44,6 @@ class Topic(models.Model):
     is_recommended = models.BooleanField(verbose_name='پیشنهادی', default=False,
                                          help_text='در صورت فعال بودن این گزینه آدرس بخش مورد نظر در صفحه اصلی نمایش '
                                                    'داده خواهد شد')
-    admins = models.ManyToManyField(to=Admin, blank=True, verbose_name='ادمین ها', related_name='admins')
 
     def __str__(self):
         return self.title
@@ -72,6 +57,20 @@ class Topic(models.Model):
 @receiver(pre_delete, sender=Topic)
 def topic_delete(sender, instance, **kwargs):
     instance.avatar.delete(False)
+
+
+class Admin(models.Model):
+    title = models.CharField(max_length=100, verbose_name='عنوان')
+    topic = models.ForeignKey(to=Topic, on_delete=models.PROTECT, related_name='admins')
+    users = models.ManyToManyField(to=User, blank=True, verbose_name='ادمین ها')
+
+    def __str__(self):
+        return self.title
+    
+    class Meta:
+        ordering = ['title']
+        verbose_name = 'ادمین'
+        verbose_name_plural = 'ادمین ها'
 
 
 WAITING_FOR_ANSWER = '1'
@@ -97,7 +96,7 @@ PRIORITY_CHOICES = [
 
 class Section(models.Model):
     topic = models.ForeignKey(to=Topic, on_delete=models.PROTECT, verbose_name='متعلق به بخش')
-    admin = models.ForeignKey(to=Admin, on_delete=models.PROTECT, verbose_name='گروه مسئولین های این زیربخش')
+    admin = models.ForeignKey(to=Admin, on_delete=models.RESTRICT, verbose_name='گروه مسئولین های این زیربخش')
     title = models.CharField(max_length=100, verbose_name='عنوان')
     description = models.TextField(verbose_name='توضیحات', null=True, blank=True)
     is_active = models.BooleanField(verbose_name='فعال', default=True,
@@ -125,7 +124,7 @@ class Ticket(models.Model):
     last_update = models.DateTimeField(auto_now=True, verbose_name='زمان آخرین تغییرات')
     priority = models.CharField(choices=PRIORITY_CHOICES, verbose_name='اولویت', max_length=1)
     section = models.ForeignKey(to=Section, on_delete=models.PROTECT, verbose_name='زیر بخش مربوطه')
-    admin = models.ForeignKey(to=Admin, on_delete=models.PROTECT, verbose_name='ادمین ها')
+    admin = models.ForeignKey(to=Admin, on_delete=models.RESTRICT, verbose_name='ادمین ها')
     topic = models.ForeignKey(Topic, on_delete=models.PROTECT, verbose_name='بخش مربوطه')
     tags = models.TextField('تگ ها', blank=True, default='')
 
@@ -140,7 +139,7 @@ class Ticket(models.Model):
 
 class TicketHistory(models.Model):
     ticket = models.ForeignKey(to=Ticket, on_delete=models.PROTECT, verbose_name='تیکت')
-    admin = models.ForeignKey(to=Admin, on_delete=models.PROTECT, verbose_name='ادمین')
+    admin = models.ForeignKey(to=Admin, on_delete=models.RESTRICT, verbose_name='ادمین')
     section = models.ForeignKey(to=Section, on_delete=models.PROTECT, verbose_name='زیر بخش')
     operator = models.ForeignKey(to=User, on_delete=models.PROTECT, verbose_name='ادمین مسئول')
     date = models.DateTimeField(verbose_name='زمان ایجاد', auto_now_add=True)

@@ -22,7 +22,7 @@ class TopicAdmin(admin.ModelAdmin):
     list_display = ('title', 'creator')
     search_fields = ['title', 'description', 'creator']
     list_filter = []
-    filter_horizontal = ['admins']
+    filter_horizontal = []
     autocomplete_fields = ['creator']
 
 class SectionAdmin(admin.ModelAdmin):
