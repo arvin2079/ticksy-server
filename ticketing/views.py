@@ -1,5 +1,6 @@
 from datetime import timedelta
 from django.shortcuts import get_object_or_404
+from django.template.defaultfilters import add
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, filters, status
 from rest_framework.response import Response
@@ -55,12 +56,6 @@ class TopicRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return Topic.objects.filter(Q(is_active=True)).distinct()
 
-    def get_object(self):
-        queryset = self.filter_queryset(self.get_queryset())
-        filter_kwargs = {self.lookup_field: self.kwargs[self.lookup_field]}
-        obj = get_object_or_404(queryset, **filter_kwargs)
-        return obj
-
     @swagger_auto_schema(
         operation_description='Deletes the Topic.\nmethod: DELETE\nurl: /topics/\<slug\>\nexample: /topics/amoozesh-khu',
         responses=delete_topic_dictionary_response)
@@ -69,6 +64,23 @@ class TopicRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
         instance.is_active = False
         instance.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TopicRolesListCreateAPIView(generics.ListCreateAPIView):
+    serializer_class = TopicAdminsSerializer
+    permission_classes = [IsAuthenticated, IsOwner]
+    pagination_class = None
+    http_method_names = ['get', 'post']
+
+    def get_queryset(self):
+        topic = get_object_or_404(Topic, id=self.kwargs['id'], is_active=True)
+        return Admin.objects.filter(Q(topic=topic)).distinct()
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, context={'request':request, 'id':self.kwargs['id']})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class EmailListAPIView(generics.ListAPIView):

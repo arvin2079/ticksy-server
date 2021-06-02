@@ -1,10 +1,10 @@
 from django.urls import path
-from .views import TopicListCreateAPIView, TopicRetrieveUpdateDestroyAPIView, EmailListAPIView, TicketListCreateAPIView, \
-    MessageListCreateAPIView, MessageUpdateAPIView, GetRecommendedTopicsAPIView, TicketListAPIView, TicketRetriveAPIView
+from .views import *
 
 urlpatterns = [
     path('topic/', TopicListCreateAPIView.as_view(), name='topic-list-create'),
     path('topic/<int:id>/', TopicRetrieveUpdateDestroyAPIView.as_view(), name='topic-retrieve-update-destroy'),
+    path('topic/<int:id>/role/', TopicRolesListCreateAPIView.as_view(), name='topicRoles-list-create'),
     path('topics/<int:id>/tickets/', TicketListCreateAPIView.as_view(), name='ticket-list-create'),
     path('tickets/', TicketListAPIView.as_view(), name='ticket-list'),
     path('tickets/<int:id>/', MessageListCreateAPIView.as_view(), name='message-list-create'),

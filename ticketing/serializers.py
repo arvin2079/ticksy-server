@@ -1,7 +1,6 @@
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework import serializers
-from rest_framework.utils import model_meta
 from ticketing.models import Admin, Topic, Ticket, Message, Attachment, ANSWERED, WAITING_FOR_ANSWER
 from users.serializers import UserSerializerRestricted
 from users.models import User, IDENTIFIED
@@ -15,6 +14,8 @@ class AdminsFieldSerializer(serializers.ModelSerializer):
     class Meta:
         model = Admin
         fields = ['id', 'title']
+        read_only_fields = ['id']
+
 
 class TopicsSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
@@ -24,7 +25,7 @@ class TopicsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Topic
         fields = ['id', 'creator', 'role', 'title', 'description', 'admins', 'url', 'avatar']
-        read_only_fields = ['id', 'creator', 'role', 'url', 'admins']
+        read_only_fields = ['id', 'creator', 'role', 'admins', 'url']
         extra_kwargs = {
             'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'id'}
         }
@@ -44,6 +45,26 @@ class TopicsSerializer(serializers.ModelSerializer):
 class TopicSerializer(TopicsSerializer):
     class Meta(TopicsSerializer.Meta):
         lookup_field = 'id'
+
+
+class TopicAdminsSerializer(AdminsFieldSerializer):
+
+    def to_internal_value(self, data):
+        self.fields['users'] = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(Q(is_active=True) & (Q(identity__status=IDENTIFIED) | Q(is_superuser=True))), many=True)
+        return super().to_internal_value(data)
+
+    def to_representation(self, instance):
+        self.fields['users'] = UserSerializerRestricted(many=True)
+        return super().to_representation(instance)
+
+    class Meta(AdminsFieldSerializer.Meta):
+        fields = ['id', 'title', 'users']
+
+    def create(self, validated_data):
+        validated_data['topic'] = Topic.objects.get(id=self.context['id'])
+        instance = super().create(validated_data)
+        instance.save()
+        return instance
 
 
 class AttachmentSerializer(serializers.ModelSerializer):
