@@ -18,14 +18,19 @@ class AdminsFieldSerializer(serializers.ModelSerializer):
 class TopicsSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
     creator = UserSerializerRestricted(read_only=True)
+    admins = AdminsFieldSerializer(many=True, read_only=True)
 
     class Meta:
         model = Topic
-        fields = ['id', 'creator', 'role', 'title', 'description', 'url', 'avatar']
+        fields = ['id', 'creator', 'role', 'title', 'description', 'admins', 'url', 'avatar']
         read_only_fields = ['id', 'creator', 'role', 'url']
         extra_kwargs = {
             'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'id'}
         }
+
+    def to_internal_value(self, data):
+        self.fields['admins'] = serializers.PrimaryKeyRelatedField(queryset=Admin.objects.filter(Q(topic__creator=self.context['request'].user)), many=True)
+        return super(TopicsSerializer, self).to_internal_value(data)
 
     def get_role(self, obj):
         if self.context['request'].user == obj.creator:
