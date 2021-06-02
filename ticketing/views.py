@@ -30,14 +30,14 @@ class TopicListCreateAPIView(generics.ListCreateAPIView):
         return self.create(request, *args, **kwargs)
 
     def get_queryset(self):
-        return Topic.objects.filter((Q(creator=self.request.user) | Q(supporters__in=[self.request.user])) & Q(
+        return Topic.objects.filter((Q(creator=self.request.user) | Q(admins__users__in=[self.request.user])) & Q(
             is_active=True)).distinct().order_by('-id')
 
 
 class TopicRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TopicSerializer
     permission_classes = [IsAuthenticated]
-    lookup_field = 'slug'
+    lookup_field = 'id'
     http_method_names = ['get', 'patch', 'delete']
 
     @swagger_auto_schema(

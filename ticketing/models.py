@@ -48,8 +48,6 @@ class Topic(models.Model):
                                 verbose_name='سازنده')
     title = models.CharField(max_length=100, verbose_name='عنوان')
     description = models.TextField(verbose_name='توضیحات', null=True, blank=True)
-    slug = models.SlugField(max_length=30, unique=True, verbose_name='تگ آدرس', validators=[validate_slug],
-                            help_text='نام اینگلیسی مناسب برای لینک (به جای فاصله از خط تیره استفاده کنید)')
     is_active = models.BooleanField(verbose_name='فعال', default=True,
                                     help_text='به جای حذف بخش، این گزینه را غیر فعال کنید')
     avatar = models.FileField(upload_to=topic_image_directory_path, null=True, blank=True,
@@ -57,7 +55,6 @@ class Topic(models.Model):
                               verbose_name='آواتار',
                               help_text='حداکثر سایز عکس باید {} باشد'.format(
                                   filesizeformat(settings.MAX_UPLOAD_IMAGE_SIZE)))
-    supporters = models.ManyToManyField(User, blank=True, related_name='supported_topics', verbose_name='پشتیبانان')
     is_recommended = models.BooleanField(verbose_name='پیشنهادی', default=False,
                                          help_text='در صورت فعال بودن این گزینه آدرس بخش مورد نظر در صفحه اصلی نمایش '
                                                    'داده خواهد شد')
@@ -103,8 +100,6 @@ class Section(models.Model):
     admin = models.ForeignKey(to=Admin, on_delete=models.PROTECT, verbose_name='گروه مسئولین های این زیربخش')
     title = models.CharField(max_length=100, verbose_name='عنوان')
     description = models.TextField(verbose_name='توضیحات', null=True, blank=True)
-    slug = models.SlugField(max_length=30, unique=True, verbose_name='تگ آدرس', validators=[validate_slug],
-                            help_text='نام اینگلیسی مناسب برای لینک (به جای فاصله از خط تیره استفاده کنید)')
     is_active = models.BooleanField(verbose_name='فعال', default=True,
                                     help_text='به جای حذف زیر بخش، این گزینه را غیر فعال کنید')
     avatar = models.FileField(upload_to=section_image_directory_path, null=True, blank=True,

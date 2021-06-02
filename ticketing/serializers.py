@@ -1,51 +1,40 @@
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework import serializers
-from ticketing.models import Topic, Ticket, Message, Attachment, ANSWERED, WAITING_FOR_ANSWER
+from ticketing.models import Admin, Topic, Ticket, Message, Attachment, ANSWERED, WAITING_FOR_ANSWER
 from users.serializers import UserSerializerRestricted
 from users.models import User, IDENTIFIED
 
 CREATOR = '1'
-SUPPORTER = '2'
+ADMIN = '2'
 
+
+class AdminsFieldSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Admin
+        fields = ['id', 'title']
 
 class TopicsSerializer(serializers.ModelSerializer):
-    supporters_ids = serializers.PrimaryKeyRelatedField(source='supporters', queryset=User.objects.filter(
-        Q(identity__status=IDENTIFIED) & (
-                Q(identity__expire_time__isnull=True) | Q(identity__expire_time__gt=timezone.now()))),
-                                                        write_only=True, many=True)
     role = serializers.SerializerMethodField()
     creator = UserSerializerRestricted(read_only=True)
-    supporters = UserSerializerRestricted(many=True, read_only=True)
 
     class Meta:
         model = Topic
-        fields = ['id', 'creator', 'role', 'title', 'description', 'slug', 'url', 'avatar', 'supporters',
-                  'supporters_ids']
-        read_only_fields = ['id', 'creator', 'role', 'is_active', 'url', 'supporters']
+        fields = ['id', 'creator', 'role', 'title', 'description', 'url', 'avatar']
+        read_only_fields = ['id', 'creator', 'role', 'url']
         extra_kwargs = {
-            'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'slug'}
+            'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'id'}
         }
-
-    def validate_supporters_ids(self, value):
-        supporters = value
-        user = self.context['request'].user
-        if user in supporters:
-            supporters.remove(user)
-        return supporters
 
     def get_role(self, obj):
         if self.context['request'].user == obj.creator:
             return CREATOR
-        return SUPPORTER
+        return ADMIN
 
     def create(self, validated_data):
         instance = super().create(validated_data)
-        user = self.context['request'].user
-        instance.creator = user
-        instance.supporters.set([])
-        if 'supporters' in validated_data:
-            instance.supporters.set(validated_data['supporters'])
+        instance.creator = self.context['request'].user
         instance.save()
         return instance
 
@@ -55,9 +44,9 @@ class TopicSerializer(TopicsSerializer):
         model = Topic
         fields = ['id', 'creator', 'role', 'title', 'description', 'url', 'avatar', 'supporters', 'supporters_ids']
         read_only_fields = ['id', 'creator', 'role', 'is_active', 'supporters', 'url']
-        lookup_field = 'slug'
+        lookup_field = 'id'
         extra_kwargs = {
-            'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'slug'}
+            'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'id'}
         }
 
     def update(self, instance, validated_data):
@@ -99,7 +88,7 @@ class TicketSerializer(serializers.ModelSerializer):
         attachments = validated_data.pop('attachments', [])
         validated_data.pop('text')
         validated_data['creator'] = user
-        validated_data['topic'] = Topic.objects.get(slug=self.context.get('view').kwargs.get('slug'))
+        validated_data['topic'] = Topic.objects.get(id=self.context.get('view').kwargs.get('id'))
         instance = super().create(validated_data)
         message = Message.objects.create(user=user, date=timezone.now(), text=text, ticket=instance)
         for attachment in attachments:
@@ -156,8 +145,8 @@ class MessageUpdateSerializer(serializers.ModelSerializer):
 class RecommendedTopicsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Topic
-        fields = ['title', 'description', 'slug', 'url', 'avatar']
+        fields = ['title', 'description', 'url', 'avatar']
         read_only_fields = fields
         extra_kwargs = {
-            'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'slug'}
+            'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'id'}
         }
