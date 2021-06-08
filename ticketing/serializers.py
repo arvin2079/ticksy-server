@@ -1,7 +1,8 @@
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import serializers
-from ticketing.models import Admin, Section, TicketHistory, Topic, Ticket, Message, Attachment, ANSWERED, WAITING_FOR_ANSWER
+from ticketing.models import Admin, IN_PROGRESS, Section, TicketHistory, Topic, Ticket, Message, Attachment, ANSWERED, WAITING_FOR_ANSWER
 from users.serializers import UserSerializerRestricted
 from users.models import User, IDENTIFIED
 from ticketing.exception import BadRequest
@@ -142,13 +143,16 @@ class TicketsSerializer(serializers.ModelSerializer):
 
 class MessageSerializer(serializers.ModelSerializer):
     user = UserSerializerRestricted(read_only=True)
-    attachment_set = AttachmentSerializer(read_only=True, many=True)
     attachments = serializers.ListField(child=serializers.FileField(), write_only=True, required=False)
+    attachment_set = AttachmentSerializer(read_only=True, many=True)
+
+    def to_internal_value(self, data):
+        return super().to_internal_value(data)
 
     class Meta:
         model = Message
-        fields = ['id', 'user', 'date', 'rate', 'text', 'url', 'attachment_set', 'attachments']
-        read_only_fields = ['id', 'user', 'rate', 'date', 'attachment_set', 'url']
+        fields = ['id', 'user', 'date', 'rate', 'text', 'url', 'attachments', 'attachment_set']
+        read_only_fields = ['id', 'user', 'rate', 'date', 'url', 'attachment_set']
         extra_kwargs = {
             'url': {'view_name': 'message-rate-update', 'lookup_field': 'id'}
         }
@@ -157,16 +161,15 @@ class MessageSerializer(serializers.ModelSerializer):
         attachments = validated_data.pop('attachments', [])
         user = self.context['request'].user
         validated_data['user'] = user
-        validated_data['ticket'] = Ticket.objects.get(id=self.context.get('id'))
+        validated_data['ticket'] = get_object_or_404(Ticket, id=self.context.get('id'))
         instance = super().create(validated_data)
-        for attachment in attachments:
-            Attachment.objects.create(attachmentfile=attachment, message=instance)
-        if instance.user in instance.ticket.topic.supporters.all() or instance.user == instance.ticket.topic.creator:
+        if self.context.get('request').user in instance.ticket.admin.users.all():
             instance.ticket.status = ANSWERED
-        else:
+        elif self.context.get('request').user == instance.ticket.creator:
             instance.ticket.status = WAITING_FOR_ANSWER
         instance.ticket.save()
-
+        for attachment in attachments:
+            Attachment.objects.create(attachmentfile=attachment, message=instance)
         return instance
 
 
@@ -181,7 +184,7 @@ class TicketHistorySerializer(serializers.ModelSerializer):
 
 class TicketSerializer(TicketsSerializer):
     section = SectionSerializer(read_only=True)
-    messages_set = MessageSerializer(many=True, read_only=True)
+    message_set = MessageSerializer(many=True, read_only=True)
     tickethistory_set = TicketHistorySerializer(many=True, read_only=True)
     admin = AdminsFieldSerializer(read_only=True)
 
@@ -191,8 +194,8 @@ class TicketSerializer(TicketsSerializer):
         return super().to_internal_value(data)
 
     class Meta(TicketsSerializer.Meta):
-        fields = ['id', 'title', 'status', 'priority', 'section', 'admin', 'tags', 'messages_set', 'tickethistory_set', 'last_update', 'creation_date']
-        read_only_fields = ['id', 'messages_set']
+        fields = ['id', 'title', 'status', 'priority', 'section', 'admin', 'tags', 'message_set', 'tickethistory_set', 'last_update', 'creation_date']
+        read_only_fields = ['id', 'message_set']
 
     def update(self, instance, validated_data):
         if validated_data['admin'] not in validated_data['section'].topic.admins.all():

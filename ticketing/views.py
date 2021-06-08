@@ -6,7 +6,7 @@ from rest_framework import generics, filters, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.pagination import PageNumberPagination
-from .permissions import IsIdentified, IsOwner, IsTicketOwnerOrTopicOwner, IsSupporterOrOwnerOrTicketCreator, IsTicketAdmin
+from .permissions import IsIdentified, IsOwner, IsTicketAdminOrCreator, IsTicketAdmin, IsSupporterOrOwnerOrTicketCreator
 from .swagger import *
 from .filters import TicketFilter
 from drf_yasg.utils import swagger_auto_schema
@@ -182,6 +182,7 @@ class TicketListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = TicketsSerializer
     permission_classes = [IsAuthenticated]
     search_fields = ['id', 'title']
+    http_method_names = ['get', 'post']
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     filterset_class = TicketFilter
 
@@ -202,6 +203,7 @@ class TicketListCreateAPIView(generics.ListCreateAPIView):
 class TicketRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
     serializer_class = TicketSerializer
     permission_classes = [IsAuthenticated, IsTicketAdmin]
+    http_method_names = ['get', 'post']
     
     def get_object(self):
         return get_object_or_404(Ticket, id=self.kwargs.get('id'))
@@ -212,17 +214,21 @@ class TicketRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
         return Response(serializer.data)
 
 
-class TicketRetriveAPIView(generics.RetrieveAPIView):
-    serializer_class = TicketSerializer
-    permission_classes = [IsAuthenticated]
+class MessageCreateAPIView(generics.CreateAPIView):
+    serializer_class = MessageSerializer
+    permission_classes = [IsAuthenticated, IsTicketAdminOrCreator]
+    http_method_names = ['post']
 
-    def get_object(self):
-        return Ticket.objects.filter(id=self.kwargs.get('id')).first()
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, context={'request': request, 'id': self.kwargs.get('id')})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class MessageListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = MessageSerializer
-    permission_classes = [IsAuthenticated, IsTicketOwnerOrTopicOwner]
+    permission_classes = [IsAuthenticated]
     pagination_class = None
     http_method_names = ['get', 'post']
 
