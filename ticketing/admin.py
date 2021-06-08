@@ -35,10 +35,10 @@ class SectionAdmin(admin.ModelAdmin):
 class TicketAdmin(admin.ModelAdmin):
     list_display = ('title', 'section', 'admin', 'get_status_display', 'get_priority_display', 'last_update')
     search_fields = ['title', 'creator']
-    list_filter = ['status', 'priority', 'creation_date', 'last_update', 'topic']
+    list_filter = ['status', 'priority', 'creation_date', 'last_update']
     readonly_fields = ['creation_date', 'last_update']
     inlines = [MessageInline]
-    autocomplete_fields = ['creator', 'topic', 'section']
+    autocomplete_fields = ['creator', 'section']
 
 
 class TicketHistoryAdmin(admin.ModelAdmin):

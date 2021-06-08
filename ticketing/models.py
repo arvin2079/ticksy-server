@@ -125,7 +125,6 @@ class Ticket(models.Model):
     priority = models.CharField(choices=PRIORITY_CHOICES, verbose_name='اولویت', max_length=1)
     section = models.ForeignKey(to=Section, on_delete=models.PROTECT, verbose_name='زیر بخش مربوطه')
     admin = models.ForeignKey(to=Admin, on_delete=models.RESTRICT, verbose_name='ادمین ها')
-    topic = models.ForeignKey(Topic, on_delete=models.PROTECT, verbose_name='بخش مربوطه')
     tags = models.TextField('تگ ها', blank=True, default='')
 
     def __str__(self):
@@ -149,8 +148,8 @@ class TicketHistory(models.Model):
     
     class Meta:
         ordering = ['-date']
-        verbose_name = 'تاریخچه عملکرد یک تیکت'
-        verbose_name_plural = 'تاریخچه های عملکرد یک تیکت'
+        verbose_name = 'تاریخچه تیکت'
+        verbose_name_plural = 'تاریخچه تیکت ها'
 
 
 class Message(models.Model):
