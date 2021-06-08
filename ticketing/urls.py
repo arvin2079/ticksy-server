@@ -12,6 +12,7 @@ urlpatterns = [
     path('ticket/<int:id>/', TicketRetrieveUpdateAPIView.as_view(), name='ticket-retrieve-update'),
     path('ticket/<int:id>/message/', MessageCreateAPIView.as_view(), name='ticket-create'),
     path('message/<int:id>/', MessageUpdateAPIView.as_view(), name='message-rate-update'),
+    path('all-topics/', TopicsListAPIView.as_view(), name='all-topics'),
     path('email/', EmailListAPIView.as_view(), name='email-list'),
     path('get-recommended-topics/', GetRecommendedTopicsAPIView.as_view(), name='recommended-topics-list')
 ]

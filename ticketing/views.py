@@ -226,26 +226,13 @@ class MessageCreateAPIView(generics.CreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class MessageListCreateAPIView(generics.ListCreateAPIView):
-    serializer_class = MessageSerializer
+class TopicsListAPIView(generics.ListAPIView):
+    serializer_class = TopicsSerializer
     permission_classes = [IsAuthenticated]
-    pagination_class = None
-    http_method_names = ['get', 'post']
-
-    @swagger_auto_schema(
-        operation_description='Returns a list of Messages that belong to the inserted Ticket id.\nmethod: GET\nurl: /tickets/\<id\>\nexample: /tickets/18/',
-        responses=get_message_dictionary_response)
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
-
-    @swagger_auto_schema(operation_id='topics_tickets_message_create',
-                         operation_description='Creates a new Message and relates it to the Ticket that It\'s id is inserted in the url.\nmethod: POST\nurl: /tickets/\<id\>\nexample: /tickets/18/',
-                         responses=post_message_dictionary_response, request_body=post_message_dictionary_request_body)
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
+    http_method_names = ['get']
 
     def get_queryset(self):
-        return Message.objects.filter(Q(ticket=self.kwargs.get('id'))).distinct().order_by('id')
+        return Topic.objects.all()
 
 
 class MessageUpdateAPIView(generics.UpdateAPIView):
