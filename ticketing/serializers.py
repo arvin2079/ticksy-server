@@ -112,28 +112,28 @@ class AttachmentSerializer(serializers.ModelSerializer):
 
 
 class TicketSerializer(serializers.ModelSerializer):
-    text = serializers.CharField(write_only=True)
+    text = serializers.CharField(write_only=True, label='متن')
     attachments = serializers.ListField(child=serializers.FileField(), write_only=True, required=False)
     creator = UserSerializerRestricted(read_only=True)
+    section = serializers.PrimaryKeyRelatedField(queryset=Section.objects.filter(Q(is_active=True) & Q(topic__is_active=True)), label='زیربخش مربوطه', write_only=True)
+
+    def to_representation(self, instance):
+        self.fields['section'] = SectionsSerializer(read_only=True)
+        return super().to_representation(instance)
 
     class Meta:
         model = Ticket
-        fields = ['id', 'creator', 'title', 'status', 'priority', 'text', 'attachments', 'last_update', 'creation_date',
-                  'url', 'tags']
-        read_only_fields = ['id', 'creator', 'topic', 'status']
-        extra_kwargs = {
-            'url': {'view_name': 'message-list-create', 'lookup_field': 'id'}
-        }
+        fields = ['id', 'creator', 'title', 'status', 'priority', 'section', 'text', 'attachments', 'last_update', 'creation_date', 'tags']
+        read_only_fields = ['id', 'creator', 'status']
 
     def create(self, validated_data):
-        user = self.context['request'].user
-        text = validated_data['text']
+        text = validated_data.pop('text', "")
         attachments = validated_data.pop('attachments', [])
-        validated_data.pop('text')
+        user = self.context['request'].user
         validated_data['creator'] = user
-        validated_data['topic'] = Topic.objects.get(id=self.context.get('view').kwargs.get('id'))
+        validated_data['admin'] = validated_data['section'].admin
         instance = super().create(validated_data)
-        message = Message.objects.create(user=user, date=timezone.now(), text=text, ticket=instance)
+        message = Message.objects.create(user=user, text=text, ticket=instance)
         for attachment in attachments:
             Attachment.objects.create(message=message, attachmentfile=attachment)
         return instance

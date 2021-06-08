@@ -1,10 +1,6 @@
-from datetime import timedelta
-
 from django.core.exceptions import ValidationError
-from django.views import generic
 from ticketing.models import Section, TicketHistory
 from django.shortcuts import get_object_or_404
-from django.template.defaultfilters import add
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, filters, status
 from rest_framework.response import Response
@@ -120,7 +116,7 @@ class SectionListCreateAPIView(generics.ListCreateAPIView):
     http_method_names = ['get', 'post']
 
     def get_queryset(self):
-        return Section.objects.filter(Q(topic__id=self.kwargs['id']) & Q(is_active=True))
+        return Section.objects.filter(Q(topic__id=self.kwargs['id']) & Q(is_active=True)).distinct()
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data, context={'request':request, 'id':self.kwargs['id']})
@@ -182,24 +178,6 @@ class EmailListAPIView(generics.ListAPIView):
         return Response(serializer.data)
 
 
-class TicketListAPIView(generics.ListAPIView):
-    serializer_class = TicketSerializer
-    permission_classes = [IsAuthenticated]
-    search_fields = ['id', 'title']
-    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    filterset_class = TicketFilter
-    http_method_names = ['get']
-
-    @swagger_auto_schema(
-        operation_description='Returns a list of Tickets that belong to the user.\nmethod: GET\nurl: /tickets/?search=searchtext&status=1&page=1\nexample: tickets/?search=1&status=2&page=1\nOptional search field in the url, will search on \"id\" and \"title\".\nOptional status, filters the results based on the status field in the model (status can have \{0, 1, 2, 3, 4\} values)\nIn status, 0 means no filter, others mean status field in the model has to be equal to status in the url',
-        responses=get_ticket_dictionary_response)
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
-
-    def get_queryset(self):
-        return Ticket.objects.filter(creator=self.request.user)
-
-
 class TicketListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = TicketSerializer
     permission_classes = [IsAuthenticated]
@@ -218,8 +196,7 @@ class TicketListCreateAPIView(generics.ListCreateAPIView):
         return super(TicketListCreateAPIView, self).get(request, *args, **kwargs)
 
     def get_queryset(self):
-        return Ticket.objects.filter(Q(topic__slug=self.kwargs.get('slug')) & (
-                    Q(topic__creator=self.request.user) | Q(topic__supporters__in=[self.request.user])))
+        return Ticket.objects.filter(Q(creator=self.request.user) | (Q(admin__users__in=[self.request.user]))).distinct()
 
 
 class TicketRetriveAPIView(generics.RetrieveAPIView):
