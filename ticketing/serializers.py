@@ -91,6 +91,13 @@ class SectionsSerializer(serializers.ModelSerializer):
         return instance
 
 
+class TopicAllDetailSerializer(TopicsSerializer):
+    section_set = SectionsSerializer(many=True)
+
+    class Meta(TopicsSerializer.Meta):
+        fields = ['id', 'creator', 'role', 'title', 'description', 'section_set', 'admins', 'url', 'avatar']
+
+
 class SectionSerializer(serializers.ModelSerializer):
     
     def to_internal_value(self, data):

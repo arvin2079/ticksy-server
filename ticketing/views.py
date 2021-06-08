@@ -227,7 +227,7 @@ class MessageCreateAPIView(generics.CreateAPIView):
 
 
 class TopicsListAPIView(generics.ListAPIView):
-    serializer_class = TopicsSerializer
+    serializer_class = TopicAllDetailSerializer
     permission_classes = [IsAuthenticated]
     http_method_names = ['get']
 
