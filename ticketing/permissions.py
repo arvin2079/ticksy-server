@@ -28,7 +28,7 @@ class IsOwner(permissions.BasePermission):
         return False
 
 
-class IsTicketOwnerOrTopicOwner(permissions.BasePermission):
+class IsTicketAdminOrCreator(permissions.BasePermission):
     message = 'شما سازنده یا ادمین این تیکت نیستید.'
     status_code = status.HTTP_403_FORBIDDEN
 
