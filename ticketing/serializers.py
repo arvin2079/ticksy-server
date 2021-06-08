@@ -1,9 +1,10 @@
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework import serializers
-from ticketing.models import Admin, Section, Topic, Ticket, Message, Attachment, ANSWERED, WAITING_FOR_ANSWER
+from ticketing.models import Admin, Section, TicketHistory, Topic, Ticket, Message, Attachment, ANSWERED, WAITING_FOR_ANSWER
 from users.serializers import UserSerializerRestricted
 from users.models import User, IDENTIFIED
+from ticketing.exception import BadRequest
 
 CREATOR = '1'
 ADMIN = '2'
@@ -111,7 +112,7 @@ class AttachmentSerializer(serializers.ModelSerializer):
         fields = ['attachmentfile']
 
 
-class TicketSerializer(serializers.ModelSerializer):
+class TicketsSerializer(serializers.ModelSerializer):
     text = serializers.CharField(write_only=True, label='متن')
     attachments = serializers.ListField(child=serializers.FileField(), write_only=True, required=False)
     creator = UserSerializerRestricted(read_only=True)
@@ -156,7 +157,7 @@ class MessageSerializer(serializers.ModelSerializer):
         attachments = validated_data.pop('attachments', [])
         user = self.context['request'].user
         validated_data['user'] = user
-        validated_data['ticket'] = Ticket.objects.get(id=self.context.get('view').kwargs.get('id'))
+        validated_data['ticket'] = Ticket.objects.get(id=self.context.get('id'))
         instance = super().create(validated_data)
         for attachment in attachments:
             Attachment.objects.create(attachmentfile=attachment, message=instance)
@@ -167,6 +168,44 @@ class MessageSerializer(serializers.ModelSerializer):
         instance.ticket.save()
 
         return instance
+
+
+class TicketHistorySerializer(serializers.ModelSerializer):
+    admin = AdminsFieldSerializer(read_only=True)
+    operator = UserSerializerRestricted(read_only=True)
+
+    class Meta:
+        model = TicketHistory
+        fields = ['id', 'admin', 'operator', 'date']
+
+
+class TicketSerializer(TicketsSerializer):
+    section = SectionSerializer(read_only=True)
+    messages_set = MessageSerializer(many=True, read_only=True)
+    tickethistory_set = TicketHistorySerializer(many=True, read_only=True)
+    admin = AdminsFieldSerializer(read_only=True)
+
+    def to_internal_value(self, data):
+        self.fields['section'] = serializers.PrimaryKeyRelatedField(queryset=Section.objects.filter(Q(is_active=True)))
+        self.fields['admin'] = serializers.PrimaryKeyRelatedField(queryset=Admin.objects.all())
+        return super().to_internal_value(data)
+
+    class Meta(TicketsSerializer.Meta):
+        fields = ['id', 'title', 'status', 'priority', 'section', 'admin', 'tags', 'messages_set', 'tickethistory_set', 'last_update', 'creation_date']
+        read_only_fields = ['id', 'messages_set']
+
+    def update(self, instance, validated_data):
+        if validated_data['admin'] not in validated_data['section'].topic.admins.all():
+            raise BadRequest(detail={'message': 'نقش انتخاب شده برای رسیدگی به این تیکت، داخل بخش ارسال شده وجود ندارد'})
+        TicketHistory.objects.create(ticket=instance, admin=instance.admin, section=instance.section, operator=self.context.get('request').user)
+        instance.title = validated_data['title']
+        instance.status = validated_data['status']
+        instance.priority = validated_data['priority']
+        instance.section = validated_data['section']
+        instance.admin = validated_data['admin']
+        instance.tags = validated_data['tags']
+        instance.save()
+        return super().create(validated_data)
 
 
 class MessageUpdateSerializer(serializers.ModelSerializer):

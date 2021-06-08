@@ -6,7 +6,7 @@ from rest_framework import generics, filters, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.pagination import PageNumberPagination
-from .permissions import IsIdentified, IsOwner, IsTicketOwnerOrTopicOwner, IsSupporterOrOwnerOrTicketCreator
+from .permissions import IsIdentified, IsOwner, IsTicketOwnerOrTopicOwner, IsSupporterOrOwnerOrTicketCreator, IsTicketAdmin
 from .swagger import *
 from .filters import TicketFilter
 from drf_yasg.utils import swagger_auto_schema
@@ -179,7 +179,7 @@ class EmailListAPIView(generics.ListAPIView):
 
 
 class TicketListCreateAPIView(generics.ListCreateAPIView):
-    serializer_class = TicketSerializer
+    serializer_class = TicketsSerializer
     permission_classes = [IsAuthenticated]
     search_fields = ['id', 'title']
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
@@ -197,6 +197,19 @@ class TicketListCreateAPIView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         return Ticket.objects.filter(Q(creator=self.request.user) | (Q(admin__users__in=[self.request.user]))).distinct()
+
+
+class TicketRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
+    serializer_class = TicketSerializer
+    permission_classes = [IsAuthenticated, IsTicketAdmin]
+    
+    def get_object(self):
+        return get_object_or_404(Ticket, id=self.kwargs.get('id'))
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, context={'request': request, 'id': self.kwargs.get('id')})
+        return Response(serializer.data)
 
 
 class TicketRetriveAPIView(generics.RetrieveAPIView):
