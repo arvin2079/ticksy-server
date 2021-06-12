@@ -3,9 +3,10 @@ from django.urls import reverse, resolve
 from users.models import User, Identity, IDENTIFIED, REQUESTED
 from ticketing.models import Ticket, Topic
 from ticketing.views import TicketListCreateAPIView, TopicListCreateAPIView, \
-    TopicRetrieveUpdateDestroyAPIView, TicketListAPIView, MessageListCreateAPIView, \
-    TicketRetriveAPIView, MessageUpdateAPIView, EmailListAPIView, \
-    GetRecommendedTopicsAPIView
+    TopicRetrieveUpdateDestroyAPIView, MessageUpdateAPIView, EmailListAPIView, \
+    GetRecommendedTopicsAPIView, TopicAdminsListCreateAPIView, AdminRetrieveUpdateDestroyAPIView, \
+    SectionListCreateAPIView, SectionRetrieveUpdateDestroyAPIView, TicketRetrieveUpdateAPIView, MessageCreateAPIView, \
+    TopicsListAPIView
 
 from datetime import datetime, timedelta
 
@@ -21,27 +22,39 @@ class TestUrls(SimpleTestCase):
         url = reverse('topic-retrieve-update-destroy', args=[0, ])
         self.assertEqual(resolve(url).func.view_class, TopicRetrieveUpdateDestroyAPIView)
 
+    def test_topic_admins_list_create_is_resolved(self):
+        url = reverse('topicAdmins-list-create', args=[0, ])
+        self.assertEqual(resolve(url).func.view_class, TopicAdminsListCreateAPIView)
+
+    def test_admin_retrieve_update_destroy_is_resolved(self):
+        url = reverse('role-retrieve-update-destroy', args=[0, 0])
+        self.assertEqual(resolve(url).func.view_class, AdminRetrieveUpdateDestroyAPIView)
+
+    def test_section_list_create_is_resolved(self):
+        url = reverse('section-list-create', args=[0, ])
+        self.assertEqual(resolve(url).func.view_class, SectionListCreateAPIView)
+
+    def test_section_retrieve_update_destroy_is_resolved(self):
+        url = reverse('section-retrieve-update-destroy', args=[0, 0])
+        self.assertEqual(resolve(url).func.view_class, SectionRetrieveUpdateDestroyAPIView)
+
     def test_ticket_list_create_is_resolved(self):
-        url = reverse('ticket-list-create', args=[0, ])
+        url = reverse('ticket-list-create')
         self.assertEqual(resolve(url).func.view_class, TicketListCreateAPIView)
 
-    def test_ticket_list_is_resolved(self):
-        url = reverse('ticket-list')
-        self.assertEqual(resolve(url).func.view_class, TicketListAPIView)
+    def test_ticket_retrieve_update_is_resolved(self):
+        url = reverse('ticket-retrieve-update', args=[0, ])
+        self.assertEqual(resolve(url).func.view_class, TicketRetrieveUpdateAPIView)
 
-    def test_message_list_create_is_resolved(self):
-        url = reverse('message-list-create', args=[1, ])
-        self.assertEqual(resolve(url).func.view_class, MessageListCreateAPIView)
-
-    def test_ticket_retrive_is_resolved(self):
-        url = reverse('ticket-detail', args=[1, ])
-        self.assertEqual(resolve(url).func.view_class, TicketRetriveAPIView)
+    def test_message_create_is_resolved(self):
+        url = reverse('ticket-create', args=[0, ])
+        self.assertEqual(resolve(url).func.view_class, MessageCreateAPIView)
 
     def test_message_update_is_resolved(self):
         url = reverse('message-rate-update', args=[1, ])
         self.assertEqual(resolve(url).func.view_class, MessageUpdateAPIView)
 
-    def test_EmailListAPIView_is_resolved(self):
+    def test_email_list_is_resolved(self):
         url = reverse('email-list')
         self.assertEqual(resolve(url).func.view_class, EmailListAPIView)
 
@@ -64,7 +77,6 @@ class TestViews(TestCase):
         user.last_name = 'صادقی'
         user.save()
 
-
     def test_TopicListCreateAPIView_get(self):
         user = User.objects.first()
         self.client.force_login(user=user)
@@ -72,7 +84,6 @@ class TestViews(TestCase):
         user.identity.request_time = datetime.now() - timedelta(days=7)
         user.identity.expire_time = datetime.now() + timedelta(days=7)
         user.identity.save()
-
 
         Topic.objects.create(
             creator=user,
@@ -94,7 +105,6 @@ class TestViews(TestCase):
         user.identity.save()
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-
 
     def test_TopicListCreateAPIView_post(self):
         user = User.objects.first()
@@ -140,7 +150,6 @@ class TestViews(TestCase):
         response = self.client.post(url, body)
         self.assertEqual(response.status_code, 201)
 
-
     def test_TopicAdminsListCreateAPIView_post(self):
         first_user = User.objects.first()
         self.client.force_login(user=first_user)
@@ -165,4 +174,3 @@ class TestViews(TestCase):
 
         response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
-
