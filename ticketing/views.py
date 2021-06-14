@@ -41,6 +41,12 @@ class TopicRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'id'
     http_method_names = ['get', 'put', 'patch', 'delete']
 
+    def get_object(self):
+        obj = get_object_or_404(Topic, id=self.kwargs[self.lookup_field])
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            self.check_object_permissions(self.request, obj)
+        return obj
+
     @swagger_auto_schema(
         operation_description='Searches for a topic and returns the topic that has a slug exactly matched with the url slug(if exist).\nmethod: GET\nurl: /topics/\<slug\>\nexample: /topics/amoozesh-khu',
         responses=get_topic_dictionary_response)
@@ -79,6 +85,7 @@ class TopicAdminsListCreateAPIView(generics.ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data, context={'request':request, 'id':self.kwargs['id']})
         serializer.is_valid(raise_exception=True)
+        self.check_object_permissions(self.request, serializer.data)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -90,7 +97,10 @@ class AdminRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     http_method_names = ['get', 'put', 'patch', 'delete']
 
     def get_object(self):
-        return get_object_or_404(Admin, id=self.kwargs['roleid'], topic__id=self.kwargs['id'], topic__is_active=True)
+        obj = get_object_or_404(Admin, id=self.kwargs['roleid'], topic__id=self.kwargs['id'], topic__is_active=True)
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            self.check_object_permissions(self.request, obj)
+        return obj
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
@@ -121,6 +131,7 @@ class SectionListCreateAPIView(generics.ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data, context={'request':request, 'id':self.kwargs['id']})
         serializer.is_valid(raise_exception=True)
+        self.check_object_permissions(self.request, serializer.data)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -132,7 +143,10 @@ class SectionRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView)
     http_method_names = ['get', 'put', 'patch', 'delete']
 
     def get_object(self):
-        return get_object_or_404(Section, id=self.kwargs['secid'], is_active=True)
+        obj = get_object_or_404(Section, id=self.kwargs['secid'], is_active=True)
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            self.check_object_permissions(self.request, obj)
+        return obj
     
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
@@ -251,7 +265,9 @@ class MessageUpdateAPIView(generics.UpdateAPIView):
         return Message.objects.filter(id=self.kwargs.get('id'))
 
     def get_object(self):
-        return get_object_or_404(self.get_queryset())
+        obj = get_object_or_404(self.get_queryset())
+        self.check_object_permissions(self.request, obj)
+        return obj
 
 
 class GetRecommendedTopicsAPIView(generics.ListAPIView):
