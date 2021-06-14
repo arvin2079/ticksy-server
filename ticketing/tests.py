@@ -175,11 +175,11 @@ class TestViews(TestCase):
 
         self.client.force_login(second_user)
 
-        # FIXME
         response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
 
         topic.admins.add(second_user)
+        topic.save()
 
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
@@ -188,6 +188,7 @@ class TestViews(TestCase):
         user = User.objects.first()
         self.client.force_login(user=user)
 
+        # FIXME : you are not the creator of this topic
         user.identity.request_time = datetime.now() - timedelta(days=7)
         user.identity.expire_time = datetime.now() + timedelta(days=7)
         user.identity.status = IDENTIFIED
@@ -252,7 +253,7 @@ class TestViews(TestCase):
     def test_SectionListCreateAPIView_post(self):
         user = User.objects.first()
         self.client.force_login(user)
-
+        # FIXME : you are not the creator of this topic
         topic = Topic.objects.create(
             creator=user,
             title='test topic',

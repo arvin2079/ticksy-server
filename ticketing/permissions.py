@@ -21,6 +21,7 @@ class IsOwner(permissions.BasePermission):
     status_code = status.HTTP_403_FORBIDDEN
 
     def has_object_permission(self, request, view, obj):
+        return False
         if 'creator' in dir(obj):
             return obj.creator == request.user
         elif 'topic' in dir(obj):
@@ -46,7 +47,7 @@ class IsSupporterOrOwnerOrTicketCreator(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         user = request.user
         ticket = obj.ticket
-        topic = ticket.topic
+        topic = ticket.section.topic
         return (((user == topic.creator or user in topic.supporters) and obj.user == ticket.creator) or (
             user == ticket.creator and (obj.user == topic.creator or obj.user in topic.supporters)))
 
