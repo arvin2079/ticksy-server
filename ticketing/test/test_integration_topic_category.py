@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from django.test import TestCase, Client
 from django.urls import reverse
 
-from ticketing.models import Topic, Admin
+from ticketing.models import Topic, Admin, Section
 from users.models import User, IDENTIFIED
 
 """
@@ -16,7 +16,7 @@ TestIntegrationTicket -> the scenario steps which we'll test here are mainmain b
        have the ability of performing some change and modification on their topic (or the topic that they are set there 
        as Admin user).
        
-    2. [ticketing section \ topic module] on the second step user decides to create an simple topic with minimume 
+    2. [ticketing section \ Topic module] on the second step user decides to create an simple topic with minimume 
        initial data and information.
        
     3. [ticketing section \ Admin module] third step is along with previous step. in this step topic creator set one or 
@@ -25,6 +25,10 @@ TestIntegrationTicket -> the scenario steps which we'll test here are mainmain b
     4. [ticketing section \ Section module] adding one section to the created topic.
     
     5. [ticketing section \ Admin module] setting a admin user for created section of our specific topic.
+    
+    6. [ticketing section \ Topic module] update some of the topic information 
+    
+    7. [ticketing section \ Section module] update some of the section information 
 
 """
 
@@ -88,7 +92,7 @@ class TestIntegrationTicket(TestCase):
 
         url = reverse('section-list-create', args=[topic.id, ])
         body = {
-            "title": "secion one",
+            "title": "section one",
             "description": "description",
             "admin": admin.id
         }
@@ -96,5 +100,20 @@ class TestIntegrationTicket(TestCase):
         response = self.client.post(url, body)
         self.assertEqual(response.status_code, 201)
 
+        url = reverse('topic-retrieve-update-destroy', args=[topic.id, ])
+        body = {
+            "description": "alternate description",
+        }
 
+        response = self.client.patch(url, body, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
 
+        section = Section.objects.get(title='section one')
+
+        url = reverse('section-retrieve-update-destroy', args=[topic.id, section.id])
+        body = {
+            "description": "alternate description",
+        }
+
+        response = self.client.patch(url, body, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
