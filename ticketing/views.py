@@ -86,7 +86,7 @@ class TopicAdminsListCreateAPIView(generics.ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data, context={'request':request, 'id':self.kwargs['id']})
         serializer.is_valid(raise_exception=True)
-        self.check_object_permissions(self.request, serializer.data)
+        # self.check_object_permissions(self.request, serializer.data)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -132,7 +132,7 @@ class SectionListCreateAPIView(generics.ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data, context={'request':request, 'id':self.kwargs['id']})
         serializer.is_valid(raise_exception=True)
-        self.check_object_permissions(self.request, serializer.data)
+        # self.check_object_permissions(self.request, serializer.data)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 

@@ -144,7 +144,7 @@ class TicketHistory(models.Model):
     date = models.DateTimeField(verbose_name='زمان ایجاد', auto_now_add=True)
 
     def __str__(self):
-        return self.id
+        return str(self.id)
     
     class Meta:
         ordering = ['-date']
