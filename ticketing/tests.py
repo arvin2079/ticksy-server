@@ -210,12 +210,6 @@ class TestViews(TestCase):
         response = self.client.post(url, body)
         self.assertEqual(response.status_code, 201)
 
-
-    def test_AdminRetrieveUpdateDestroyAPIView_get(self):
-        ## TODO
-        pass
-
-
     def test_SectionListCreateAPIView_get(self):
         topic_creator_user = User.objects.first()
         topic_creator_user.identity.request_time = datetime.now() - timedelta(days=7)
@@ -249,7 +243,6 @@ class TestViews(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
-
     def test_SectionListCreateAPIView_post(self):
         user = User.objects.first()
         self.client.force_login(user)
@@ -277,7 +270,6 @@ class TestViews(TestCase):
 
         response = self.client.post(url, body)
         self.assertEqual(response.status_code, 201)
-
 
     def test_TicketListCreateAPIView_get(self):
         user = User.objects.first()
@@ -411,3 +403,71 @@ class TestViews(TestCase):
 
         response = self.client.patch(url, body, content_type='application/json')
         self.assertEqual(response.status_code, 200)
+
+
+class TestModels(TestCase):
+
+    def setUp(self):
+        user = User.objects.create_user(
+            email='ab@ab.com',
+            password='12345678',
+        )
+        user.identity.request_time = datetime.now() - timedelta(days=7)
+        user.identity.expire_time = datetime.now() + timedelta(days=7)
+        user.identity.status = IDENTIFIED
+        user.identity.save()
+
+        self.user = user
+
+    def test_topic_create_successfully(self):
+        Topic.objects.create(
+            creator=self.user,
+            title='title',
+            description='description',
+            is_recommended=True,
+        )
+
+        topic = Topic.objects.filter(creator=self.user, title='title').first()
+
+        self.assertTrue(hasattr(topic, 'description'))
+        self.assertTrue(hasattr(topic, 'is_recommended'))
+        self.assertTrue(hasattr(topic, 'avatar'))
+        self.assertTrue(hasattr(topic, 'avatar'))
+
+        self.assertEqual(str(topic), topic.title)
+
+    def test_admin_create_successfully(self):
+        users = []
+        for i in range(0, 5):
+            users[i] = User.objects.create_user(
+                email='testuser' + f'{i}' + '@test.com',
+                password='testtest'
+            )
+            users[i].identity.status = IDENTIFIED
+            users[i].save()
+
+        topic = Topic.objects.create(
+            creator=self.user,
+            title='title',
+            description='description',
+            is_recommended=True,
+        )
+
+        admin = Admin.objects.create(
+            title='admin title',
+            topic=topic,
+        )
+
+        for i in range(0, len(users)):
+            admin.users.add(users[i])
+        topic.save()
+
+        admin = Admin.objects.filter(title='admin title').first()
+
+        self.assertTrue(hasattr(admin, 'topic'))
+        self.assertTrue(hasattr(admin, 'users'))
+        print(admin.users)
+        self.assertEqual(len(admin.users), len(users))
+
+    def test_identity_assign_to_user(self):
+        self.assertEqual(self.identity.user, self.user)
