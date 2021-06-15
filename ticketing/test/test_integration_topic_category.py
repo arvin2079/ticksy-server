@@ -9,14 +9,14 @@ from users.models import User, IDENTIFIED
 scenarois doc address path: https://docs.google.com/document/d/188OacAZRv_25gqC7y3psLOKbcyyZJTDT/edit#
 the document access is private for team members but feel free to request access for this content. 
 
-Testing Scenarios As Integeration Test:
-TestIntegrationTicket -> the scenario steps which we'll test here are mainmain bellow : 
+Testing Scenarios As Integration Test:
+TestIntegrationTopic -> the scenario steps which we'll test here are mentioned bellow : 
 
-    1. [users section \ Authenticaion module] user login and identified so he/she would be able to create topic and 
+    1. [users section \ Authentication module] user login and identified so he/she would be able to create topic and 
        have the ability of performing some change and modification on their topic (or the topic that they are set there 
        as Admin user).
        
-    2. [ticketing section \ Topic module] on the second step user decides to create an simple topic with minimume 
+    2. [ticketing section \ Topic module] on the second step user decides to create an simple topic with minimum
        initial data and information.
        
     3. [ticketing section \ Admin module] third step is along with previous step. in this step topic creator set one or 
@@ -33,7 +33,7 @@ TestIntegrationTicket -> the scenario steps which we'll test here are mainmain b
 """
 
 
-class TestIntegrationTicket(TestCase):
+class TestIntegrationTopic(TestCase):
 
     def setUp(self):
         self.client = Client()

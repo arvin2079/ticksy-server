@@ -341,3 +341,19 @@ class TestViews(TestCase):
 
         response = self.client.patch(url, body, content_type='application/json')
         self.assertEqual(response.status_code, 200)
+
+    def test_TopicsListAPIView_post(self):
+        user = User.objects.first()
+        self.client.force_login(user)
+
+        for i in range(5):
+            Topic.objects.create(
+                creator_id=user.id,
+                title='test topic',
+                description='this is for test purposes!',
+            )
+
+        url = reverse('all-topics')
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
