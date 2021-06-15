@@ -153,6 +153,8 @@ class TestViews(TestCase):
     def test_TopicAdminsListCreateAPIView_get(self):
         first_user = User.objects.first()
         self.client.force_login(user=first_user)
+        first_user.identity.status = IDENTIFIED
+        first_user.save()
 
         second_user = User.objects.create_user(
             email='second@test.com',
@@ -160,6 +162,7 @@ class TestViews(TestCase):
         )
         second_user.first_name = 'امیرعلی'
         second_user.last_name = 'صبوری'
+        second_user.identity.status = IDENTIFIED
         second_user.save()
 
         topic = Topic.objects.create(
