@@ -23,15 +23,16 @@ class IsOwner(permissions.BasePermission):
     message = 'شما سازنده این تاپیک نیستید.'
     status_code = status.HTTP_403_FORBIDDEN
 
-    def has_object_permission(self, request, view, obj):
-        if 'creator' in dir(obj):
-            return obj.creator == request.user
-        elif 'topic' in dir(obj):
-            return obj.topic.creator == request.user
-        return False
+    # def has_object_permission(self, request, view, obj):
+    #     if 'creator' in dir(obj):
+    #         return obj.creator == request.user
+    #     elif 'topic' in dir(obj):
+    #         return obj.topic.creator == request.user
+    #     return False
 
     def has_permission(self, request, view):
-        pass
+        topic = get_object_or_404(Topic, id=view.kwargs['id'], is_active=True)
+        return request.user == topic.creator
 
 
 class HasAccessToRoll(permissions.BasePermission):
@@ -40,7 +41,7 @@ class HasAccessToRoll(permissions.BasePermission):
         topic = get_object_or_404(Topic, id=view.kwargs['id'], is_active=True)
         if request.method == "GET":
             topic_members = User.objects.filter(admin__topic=topic).distinct()
-            return request.user in topic_members
+            return (request.user in topic_members) or request.user == topic.creator
         return request.user == topic.creator
 
 
