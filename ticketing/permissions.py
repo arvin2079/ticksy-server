@@ -1,6 +1,9 @@
 from datetime import datetime
 from rest_framework import permissions
-from users.models import IDENTIFIED
+from rest_framework.generics import get_object_or_404
+
+from ticketing.models import Topic
+from users.models import IDENTIFIED, User
 from rest_framework import status
 
 
@@ -21,12 +24,24 @@ class IsOwner(permissions.BasePermission):
     status_code = status.HTTP_403_FORBIDDEN
 
     def has_object_permission(self, request, view, obj):
-        return False
         if 'creator' in dir(obj):
             return obj.creator == request.user
         elif 'topic' in dir(obj):
             return obj.topic.creator == request.user
         return False
+
+    def has_permission(self, request, view):
+        pass
+
+
+class HasAccessToRoll(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        topic = get_object_or_404(Topic, id=view.kwargs['id'], is_active=True)
+        if request.method == "GET":
+            topic_members = User.objects.filter(admin__topic=topic).distinct()
+            return request.user in topic_members
+        return request.user == topic.creator
 
 
 class IsTicketAdminOrCreator(permissions.BasePermission):

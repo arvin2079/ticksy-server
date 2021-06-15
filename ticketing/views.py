@@ -6,7 +6,8 @@ from rest_framework import generics, filters, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.pagination import PageNumberPagination
-from .permissions import IsIdentified, IsOwner, IsTicketAdminOrCreator, IsTicketAdmin, IsSupporterOrOwnerOrTicketCreator
+from .permissions import IsIdentified, IsOwner, IsTicketAdminOrCreator, IsTicketAdmin, \
+    IsSupporterOrOwnerOrTicketCreator, HasAccessToRoll
 from .swagger import *
 from .filters import TicketFilter
 from drf_yasg.utils import swagger_auto_schema
@@ -74,7 +75,7 @@ class TopicRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
 
 class TopicAdminsListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = TopicAdminsSerializer
-    permission_classes = [IsAuthenticated, IsOwner]
+    permission_classes = [IsAuthenticated, HasAccessToRoll]
     pagination_class = None
     http_method_names = ['get', 'post']
 
