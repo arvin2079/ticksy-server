@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from django.core.validators import validate_email
 
 
 def user_avatar_directory_path(instance, filename):
@@ -39,7 +40,7 @@ class UserManager(BaseUserManager):
 #  2-add as much as you can fields and methods of AbstractUser (why didn't just override AbstractUser?).
 
 class User(PermissionsMixin, AbstractBaseUser):
-    email = models.EmailField(unique=True, max_length=255)
+    email = models.EmailField(unique=True, max_length=255, validators=[])
     first_name = models.CharField(_('first name'), max_length=30, blank=True)
     last_name = models.CharField(_('last name'), max_length=30, blank=True)
     is_active = models.BooleanField(default=True)
