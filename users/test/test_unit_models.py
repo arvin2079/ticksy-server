@@ -28,20 +28,8 @@ class TestModels(TestCase):
             password='123456',
         ))
 
-    ## FIXME : thisssssss
-    def test_user_invalid_email(self):
-
-        user = User.objects.create_user(
-            email='test.com',
-            password='123456',
-        )
-
-        print(user.email)
-
-        # self.assertRaises(ValueError, lambda: User.objects.create_user(
-        #     email='test.com',
-        #     password='123456',
-        # ))
+    def test_user_isactive_by_default(self):
+        self.assertTrue(self.user.is_active)
 
     def test_user_assign_email_on_creation(self):
         self.assertEqual(self.user.email, 'ab@ab.com')

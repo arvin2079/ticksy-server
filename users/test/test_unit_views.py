@@ -12,20 +12,44 @@ class TestViews(TestCase):
             password='12345678',
         )
 
-    def test_UserInfoApiView(self):
+    def test_UserInfoApiView_200(self):
         user = User.objects.first()
         self.client.force_login(user=user)
+
         url = reverse('users:user_info')
         response = self.client.get(url)
+
         self.assertEqual(response.status_code, 200)
 
-    def test_SigninApiView(self):
+    def test_UserInfoApiView_200(self):
+        url = reverse('users:user_info')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_SigninApiView_200(self):
         url = reverse('users:user_signin')
         response = self.client.post(url, {
             "username": "a@a.com",
             "password": "12345678"
         })
         self.assertEqual(response.status_code, 200)
+
+    def test_SigninApiView_400(self):
+        url = reverse('users:user_signin')
+        body = {
+            "username": "aa.com",
+            "password": "12345678"
+        }
+
+        response = self.client.post(url, body)
+        self.assertEqual(response.status_code, 400)
+
+        body['username'] = 'a@a.com'
+        body['password'] = '123'
+
+        response = self.client.post(url, body)
+        self.assertEqual(response.status_code, 400)
 
     # def test_SignupApiView(self):
     #     url = reverse('users:user_signup')

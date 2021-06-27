@@ -36,9 +36,6 @@ class UserManager(BaseUserManager):
         return user
 
 
-# TODO: 1-add validators to fields and appropriate verbose_name.
-#  2-add as much as you can fields and methods of AbstractUser (why didn't just override AbstractUser?).
-
 class User(PermissionsMixin, AbstractBaseUser):
     email = models.EmailField(unique=True, max_length=255, validators=[])
     first_name = models.CharField(_('first name'), max_length=30, blank=True)
@@ -73,7 +70,7 @@ STATUS_CHOICES = (
 )
 
 
-class Identity(models.Model):  # todo: should auto created with user.
+class Identity(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='کاربر')
     identifier_image = models.ImageField(upload_to=user_identifier_image_directory_path, blank=True, null=True,
                                          verbose_name='عکس احراز هویت')
