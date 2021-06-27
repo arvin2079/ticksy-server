@@ -494,7 +494,7 @@ class TestViews(TestCase):
         }
 
         response = self.client.patch(url, body, content_type='application/json')
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 404)
 
     def test_MessageCreateAPIView_post_400_2(self):
         user = User.objects.get(email='first@test.com')
