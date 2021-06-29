@@ -2,7 +2,7 @@ from datetime import datetime
 from rest_framework import permissions
 from rest_framework.generics import get_object_or_404
 
-from ticketing.models import Topic
+from ticketing.models import Topic, Ticket
 from users.models import IDENTIFIED, User
 from rest_framework import status
 
@@ -49,11 +49,15 @@ class IsTicketAdminOrCreator(permissions.BasePermission):
     message = 'شما سازنده یا ادمین این تیکت نیستید.'
     status_code = status.HTTP_403_FORBIDDEN
 
-    def has_object_permission(self, request, view, obj):
-        user = request.user
-        if user == obj.ticket.topic.creator or user in obj.ticket.topic.supporters or user == obj.ticket.creator:
-            return True
-        return False
+    def has_permission(self, request, view):
+        ticket = get_object_or_404(Ticket, id=view.kwargs['id'])
+        return ticket.creator == request.user or ticket.admin.users.filter(id=request.user.id).exists()
+
+    # def has_object_permission(self, request, view, obj):
+    #     user = request.user
+    #     if user == obj.ticket.topic.creator or user in obj.ticket.topic.supporters or user == obj.ticket.creator:
+    #         return True
+    #     return False
 
 
 class IsSupporterOrOwnerOrTicketCreator(permissions.BasePermission):

@@ -663,11 +663,30 @@ class TestViews(TestCase):
         response = self.client.post(url, body)
         self.assertEqual(response.status_code, 401)
 
-    def test_MessageCreateAPIView_post_201(self):
+    def test_MessageCreateAPIView_post_201_1(self):
         user = User.objects.get(email='first@test.com')
         self.client.force_login(user)
 
         ticket = Ticket.objects.get(title='test ticket')
+
+        url = reverse('ticket-create', args=[ticket.id, ])
+        body = {
+            "user": {user.id},
+            "text": "some text",
+        }
+
+        response = self.client.post(url, body)
+        self.assertEqual(response.status_code, 201)
+
+    def test_MessageCreateAPIView_post_201_2(self):
+        user = User.objects.get(email='second@test.com')
+        self.client.force_login(user)
+
+        self.client.force_login(user)
+
+        ticket = Ticket.objects.get(title='test ticket')
+
+        ticket.admin.users.add(user)
 
         url = reverse('ticket-create', args=[ticket.id, ])
         body = {
