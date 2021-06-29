@@ -850,3 +850,102 @@ class TestViews(TestCase):
 
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 204)
+
+    def test_TopicRetrieveUpdateDestroyAPIView_get_200(self):
+        user = User.objects.get(email='first@test.com')
+        self.client.force_login(user)
+
+        topic = Topic.objects.get(title='test topic')
+
+        url = reverse('topic-retrieve-update-destroy', args=[topic.id])
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_TopicRetrieveUpdateDestroyAPIView_get_401(self):
+        topic = Topic.objects.get(title='test topic')
+
+        url = reverse('topic-retrieve-update-destroy', args=[topic.id])
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 401)
+
+    def test_TopicRetrieveUpdateDestroyAPIView_get_403(self):
+        user = User.objects.get(email='second@test.com')
+        self.client.force_login(user)
+
+        topic = Topic.objects.get(title='test topic')
+
+        url = reverse('topic-retrieve-update-destroy', args=[topic.id])
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+
+    def test_TopicRetrieveUpdateDestroyAPIView_patch_200(self):
+        user = User.objects.get(email='first@test.com')
+        self.client.force_login(user)
+
+        topic = Topic.objects.get(title='test topic')
+
+        url = reverse('topic-retrieve-update-destroy', args=[topic.id])
+        body = {
+            "description": "string",
+        }
+
+        response = self.client.patch(url, body, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+
+    def test_TopicRetrieveUpdateDestroyAPIView_patch_401(self):
+        topic = Topic.objects.get(title='test topic')
+
+        url = reverse('topic-retrieve-update-destroy', args=[topic.id])
+        body = {
+            "description": "string",
+        }
+
+        response = self.client.patch(url, body, content_type='application/json')
+        self.assertEqual(response.status_code, 401)
+
+    def test_TopicRetrieveUpdateDestroyAPIView_patch_403(self):
+        user = User.objects.get(email='second@test.com')
+        self.client.force_login(user)
+
+        topic = Topic.objects.get(title='test topic')
+
+        url = reverse('topic-retrieve-update-destroy', args=[topic.id])
+        body = {
+            "description": "string",
+        }
+
+        response = self.client.patch(url, body, content_type='application/json')
+        self.assertEqual(response.status_code, 403)
+
+    def test_TopicRetrieveUpdateDestroyAPIView_delete_204(self):
+        user = User.objects.get(email='first@test.com')
+        self.client.force_login(user)
+
+        topic = Topic.objects.get(title='test topic')
+
+        url = reverse('topic-retrieve-update-destroy', args=[topic.id])
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 204)
+
+    def test_TopicRetrieveUpdateDestroyAPIView_delete_401(self):
+        topic = Topic.objects.get(title='test topic')
+
+        url = reverse('topic-retrieve-update-destroy', args=[topic.id])
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 401)
+
+    def test_TopicRetrieveUpdateDestroyAPIView_delete_403(self):
+        user = User.objects.get(email='second@test.com')
+        self.client.force_login(user)
+
+        topic = Topic.objects.get(title='test topic')
+
+        url = reverse('topic-retrieve-update-destroy', args=[topic.id])
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 403)
