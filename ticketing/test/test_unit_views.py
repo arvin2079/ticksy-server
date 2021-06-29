@@ -63,6 +63,13 @@ class TestViews(TestCase):
             admin=admin,
         )
 
+        for i in range(5):
+            Topic.objects.create(
+                creator_id=user.id,
+                title='test topic ' + str(i),
+                description='this is for test purposes!',
+            )
+
     def test_TopicListCreateAPIView_get_401(self):
         url = reverse('topic-list-create')
         response = self.client.get(url)
@@ -472,7 +479,7 @@ class TestViews(TestCase):
         response = self.client.post(url, body)
         self.assertEqual(response.status_code, 201)
 
-    def test_MessageCreateAPIView_post_400_1(self):
+    def test_MessageUpdateAPIView_post_400_1(self):
         user = User.objects.get(email='first@test.com')
         self.client.force_login(user)
 
@@ -496,7 +503,7 @@ class TestViews(TestCase):
         response = self.client.patch(url, body, content_type='application/json')
         self.assertEqual(response.status_code, 404)
 
-    def test_MessageCreateAPIView_post_400_2(self):
+    def test_MessageUpdateAPIView_post_400_2(self):
         user = User.objects.get(email='first@test.com')
         self.client.force_login(user)
 
@@ -520,7 +527,7 @@ class TestViews(TestCase):
         response = self.client.patch(url, body, content_type='application/json')
         self.assertEqual(response.status_code, 400)
 
-    def test_MessageCreateAPIView_post_401(self):
+    def test_MessageUpdateAPIView_post_401(self):
         user = User.objects.get(email='first@test.com')
 
         ticket = Ticket.objects.get(title='test ticket')
@@ -538,7 +545,7 @@ class TestViews(TestCase):
         response = self.client.patch(url, body, content_type='application/json')
         self.assertEqual(response.status_code, 401)
 
-    def test_MessageCreateAPIView_post_403(self):
+    def test_MessageUpdateAPIView_post_403(self):
         user = User.objects.get(email='first@test.com')
         self.client.force_login(user)
 
@@ -557,7 +564,7 @@ class TestViews(TestCase):
         response = self.client.patch(url, body, content_type='application/json')
         self.assertEqual(response.status_code, 403)
 
-    def test_MessageCreateAPIView_post_201(self):
+    def test_MessageUpdateAPIView_post_201(self):
         user = User.objects.get(email='first@test.com')
         self.client.force_login(user)
 
@@ -581,18 +588,93 @@ class TestViews(TestCase):
         response = self.client.patch(url, body, content_type='application/json')
         self.assertEqual(response.status_code, 200)
 
-    def test_TopicsListAPIView_post(self):
-        user = User.objects.first()
+    def test_TopicsListAPIView_get_401(self):
+        url = reverse('all-topics')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_TopicsListAPIView_get_200(self):
+        user = User.objects.get(email='first@test.com')
         self.client.force_login(user)
 
-        for i in range(5):
-            Topic.objects.create(
-                creator_id=user.id,
-                title='test topic',
-                description='this is for test purposes!',
-            )
-
         url = reverse('all-topics')
-
         response = self.client.get(url)
+
         self.assertEqual(response.status_code, 200)
+
+    def test_EmailListAPIView_get_403(self):
+        user = User.objects.get(email='first@test.com')
+        self.client.force_login(user)
+
+        url = reverse('email-list')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_EmailListAPIView_get_401(self):
+        url = reverse('email-list')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_EmailListAPIView_get_200(self):
+        user = User.objects.get(email='first@test.com')
+        self.client.force_login(user)
+
+        user.identity.request_time = datetime.now() - timedelta(days=7)
+        user.identity.expire_time = datetime.now() + timedelta(days=7)
+        user.identity.status = IDENTIFIED
+        user.identity.save()
+
+        url = reverse('email-list')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_MessageCreateAPIView_post_403(self):
+        user = User.objects.get(email='second@test.com')
+        self.client.force_login(user)
+
+        self.client.force_login(user)
+
+        ticket = Ticket.objects.get(title='test ticket')
+
+        url = reverse('ticket-create', args=[ticket.id, ])
+        body = {
+            "user": {user.id},
+            "text": "some text",
+        }
+
+        response = self.client.post(url, body)
+        self.assertEqual(response.status_code, 403)
+
+    def test_MessageCreateAPIView_post_401(self):
+        user = User.objects.get(email='first@test.com')
+
+        ticket = Ticket.objects.get(title='test ticket')
+
+        url = reverse('ticket-create', args=[ticket.id, ])
+        body = {
+            "user": {user.id},
+            "text": "some text",
+        }
+
+        response = self.client.post(url, body)
+        self.assertEqual(response.status_code, 401)
+
+    def test_MessageCreateAPIView_post_201(self):
+        user = User.objects.get(email='first@test.com')
+        self.client.force_login(user)
+
+        ticket = Ticket.objects.get(title='test ticket')
+
+        url = reverse('ticket-create', args=[ticket.id, ])
+        body = {
+            "user": {user.id},
+            "text": "some text",
+        }
+
+        response = self.client.post(url, body)
+        self.assertEqual(response.status_code, 201)
+
