@@ -76,5 +76,9 @@ class IsTicketAdmin(permissions.BasePermission):
     message = 'فقط یکی از ادمین های تیکت میتواند تیکت ها را تغییر دهد'
     status_code = status.HTTP_403_FORBIDDEN
 
-    def has_object_permission(self, request, view, obj):
-        return request.user in obj.admin.users.all()
+    def has_permission(self, request, view):
+        ticket = get_object_or_404(Ticket, id=view.kwargs['id'])
+        return ticket.admin.users.filter(id=request.user.id).exists()
+
+    # def has_object_permission(self, request, view, obj):
+    #     return request.user in obj.admin.users.all()

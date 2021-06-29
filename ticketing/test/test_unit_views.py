@@ -636,8 +636,6 @@ class TestViews(TestCase):
         user = User.objects.get(email='second@test.com')
         self.client.force_login(user)
 
-        self.client.force_login(user)
-
         ticket = Ticket.objects.get(title='test ticket')
 
         url = reverse('ticket-create', args=[ticket.id, ])
@@ -682,8 +680,6 @@ class TestViews(TestCase):
         user = User.objects.get(email='second@test.com')
         self.client.force_login(user)
 
-        self.client.force_login(user)
-
         ticket = Ticket.objects.get(title='test ticket')
 
         ticket.admin.users.add(user)
@@ -697,3 +693,160 @@ class TestViews(TestCase):
         response = self.client.post(url, body)
         self.assertEqual(response.status_code, 201)
 
+    def test_TicketRetrieveUpdateAPIView_get_403_1(self):
+        user = User.objects.get(email='first@test.com')
+        self.client.force_login(user)
+
+        ticket = Ticket.objects.get(title='test ticket')
+
+        url = reverse('ticket-retrieve-update', args=[ticket.id, ])
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+
+    def test_TicketRetrieveUpdateAPIView_get_403_2(self):
+        user = User.objects.get(email='second@test.com')
+        self.client.force_login(user)
+
+        ticket = Ticket.objects.get(title='test ticket')
+
+        url = reverse('ticket-retrieve-update', args=[ticket.id, ])
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+
+    def test_TicketRetrieveUpdateAPIView_get_200(self):
+        user = User.objects.get(email='second@test.com')
+        self.client.force_login(user)
+
+        ticket = Ticket.objects.get(title='test ticket')
+
+        ticket.admin.users.add(user)
+
+        url = reverse('ticket-retrieve-update', args=[ticket.id, ])
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_SectionRetrieveUpdateDestroyAPIView_get_200(self):
+        user = User.objects.get(email='first@test.com')
+        self.client.force_login(user)
+
+        ticket = Ticket.objects.get(title='test ticket')
+        section = Section.objects.get(title='test section')
+
+        url = reverse('section-retrieve-update-destroy', args=[ticket.id, section.id])
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_SectionRetrieveUpdateDestroyAPIView_get_401(self):
+        ticket = Ticket.objects.get(title='test ticket')
+        section = Section.objects.get(title='test section')
+
+        url = reverse('section-retrieve-update-destroy', args=[ticket.id, section.id])
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 401)
+
+    def test_SectionRetrieveUpdateDestroyAPIView_get_403(self):
+        user = User.objects.get(email='second@test.com')
+        self.client.force_login(user)
+
+        ticket = Ticket.objects.get(title='test ticket')
+        section = Section.objects.get(title='test section')
+
+        url = reverse('section-retrieve-update-destroy', args=[ticket.id, section.id])
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+
+    def test_SectionRetrieveUpdateDestroyAPIView_patch_200(self):
+        user = User.objects.get(email='first@test.com')
+        self.client.force_login(user)
+
+        ticket = Ticket.objects.get(title='test ticket')
+        section = Section.objects.get(title='test section')
+
+        url = reverse('section-retrieve-update-destroy', args=[ticket.id, section.id])
+        body = {
+            "description": "string",
+        }
+
+        response = self.client.patch(url, body, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+
+    def test_SectionRetrieveUpdateDestroyAPIView_patch_401(self):
+        ticket = Ticket.objects.get(title='test ticket')
+        section = Section.objects.get(title='test section')
+
+        url = reverse('section-retrieve-update-destroy', args=[ticket.id, section.id])
+        body = {
+            "description": "string",
+        }
+
+        response = self.client.patch(url, body, content_type='application/json')
+        self.assertEqual(response.status_code, 401)
+
+    def test_SectionRetrieveUpdateDestroyAPIView_patch_403(self):
+        user = User.objects.get(email='second@test.com')
+        self.client.force_login(user)
+
+        ticket = Ticket.objects.get(title='test ticket')
+        section = Section.objects.get(title='test section')
+
+        url = reverse('section-retrieve-update-destroy', args=[ticket.id, section.id])
+        body = {
+            "description": "string",
+        }
+
+        response = self.client.patch(url, body, content_type='application/json')
+        self.assertEqual(response.status_code, 403)
+
+    def test_SectionRetrieveUpdateDestroyAPIView_patch_415(self):
+        user = User.objects.get(email='first@test.com')
+        self.client.force_login(user)
+
+        ticket = Ticket.objects.get(title='test ticket')
+        section = Section.objects.get(title='test section')
+
+        url = reverse('section-retrieve-update-destroy', args=[ticket.id, section.id])
+        body = {
+            "description": "string",
+        }
+
+        response = self.client.patch(url, body)
+        self.assertEqual(response.status_code, 415)
+
+    def test_SectionRetrieveUpdateDestroyAPIView_delete_401(self):
+        ticket = Ticket.objects.get(title='test ticket')
+        section = Section.objects.get(title='test section')
+
+        url = reverse('section-retrieve-update-destroy', args=[ticket.id, section.id])
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 401)
+
+    def test_SectionRetrieveUpdateDestroyAPIView_delete_403(self):
+        user = User.objects.get(email='second@test.com')
+        self.client.force_login(user)
+
+        ticket = Ticket.objects.get(title='test ticket')
+        section = Section.objects.get(title='test section')
+
+        url = reverse('section-retrieve-update-destroy', args=[ticket.id, section.id])
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 403)
+
+    def test_SectionRetrieveUpdateDestroyAPIView_delete_204(self):
+        user = User.objects.get(email='first@test.com')
+        self.client.force_login(user)
+
+        ticket = Ticket.objects.get(title='test ticket')
+        section = Section.objects.get(title='test section')
+
+        url = reverse('section-retrieve-update-destroy', args=[ticket.id, section.id])
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 204)
