@@ -72,13 +72,13 @@ class IsSupporterOrOwnerOrTicketCreator(permissions.BasePermission):
             user == ticket.creator and (obj.user == topic.creator or obj.user in topic.supporters)))
 
 
-class IsTicketAdmin(permissions.BasePermission):
+class HasChangeTicketPermission(permissions.BasePermission):
     message = 'فقط یکی از ادمین های تیکت میتواند تیکت ها را تغییر دهد'
     status_code = status.HTTP_403_FORBIDDEN
 
     def has_permission(self, request, view):
         ticket = get_object_or_404(Ticket, id=view.kwargs['id'])
-        return ticket.admin.users.filter(id=request.user.id).exists()
+        return ticket.admin.users.filter(id=request.user.id).exists() or request.method == "GET"
 
     # def has_object_permission(self, request, view, obj):
     #     return request.user in obj.admin.users.all()

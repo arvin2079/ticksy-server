@@ -6,7 +6,7 @@ from rest_framework import generics, filters, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.pagination import PageNumberPagination
-from .permissions import IsIdentified, IsOwner, IsTicketAdminOrCreator, IsTicketAdmin, \
+from .permissions import IsIdentified, IsOwner, IsTicketAdminOrCreator, HasChangeTicketPermission, \
     IsSupporterOrOwnerOrTicketCreator, HasAccessToRoll
 from .swagger import *
 from .filters import TicketFilter
@@ -217,7 +217,7 @@ class TicketListCreateAPIView(generics.ListCreateAPIView):
 
 class TicketRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
     serializer_class = TicketSerializer
-    permission_classes = [IsAuthenticated, IsTicketAdmin]
+    permission_classes = [IsAuthenticated, HasChangeTicketPermission]
     http_method_names = ['get', 'patch']
     
     def get_object(self):
