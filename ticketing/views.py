@@ -218,7 +218,7 @@ class TicketListCreateAPIView(generics.ListCreateAPIView):
 class TicketRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
     serializer_class = TicketSerializer
     permission_classes = [IsAuthenticated, IsTicketAdmin]
-    http_method_names = ['get', 'post']
+    http_method_names = ['get', 'patch']
     
     def get_object(self):
         return get_object_or_404(Ticket, id=self.kwargs.get('id'))
