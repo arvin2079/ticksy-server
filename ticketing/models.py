@@ -1,4 +1,4 @@
-from django.core.validators import validate_slug, MaxValueValidator, MinValueValidator, FileExtensionValidator, \
+from django.core.validators import MaxValueValidator, MinValueValidator, FileExtensionValidator, \
     ValidationError
 from django.template.defaultfilters import filesizeformat
 from django.db.models.signals import pre_delete
@@ -9,7 +9,11 @@ from users.models import User
 
 
 def topic_image_directory_path(instance, filename):
-    return 'topic/{0}/image/{1}'.format(instance.slug, filename)
+    return 'topic/{0}/image/{1}'.format(instance.creator.id, filename)
+
+
+def section_image_directory_path(instance, filename):
+    return 'topic/{0}/section/{1}/image/{2}'.format(instance.topic.creator.id, instance.topic.id, filename)
 
 
 def user_files_directory_path(instance, filename):
@@ -23,14 +27,13 @@ def validate_image_size(image):
         raise ValidationError('حداکثر سایز عکس باید {} باشد'.format((filesizeformat(settings.MAX_UPLOAD_IMAGE_SIZE))))
 
 
+VALID_AVATAR_EXTENSION = ['png', 'jpg', 'jpeg']
+
 class Topic(models.Model):
-    VALID_AVATAR_EXTENSION = ['png', 'jpg', 'jpeg']
     creator = models.ForeignKey(User, related_name='created_topics', null=True, on_delete=models.PROTECT,
                                 verbose_name='سازنده')
     title = models.CharField(max_length=100, verbose_name='عنوان')
     description = models.TextField(verbose_name='توضیحات', null=True, blank=True)
-    slug = models.SlugField(max_length=30, null=False, unique=True, verbose_name='تگ آدرس', validators=[validate_slug],
-                            help_text='نام اینگلیسی مناسب برای لینک (به جای فاصله از خط تیره استفاده کنید)')
     is_active = models.BooleanField(verbose_name='فعال', default=True,
                                     help_text='به جای حذف بخش، این گزینه را غیر فعال کنید')
     avatar = models.FileField(upload_to=topic_image_directory_path, null=True, blank=True,
@@ -38,7 +41,6 @@ class Topic(models.Model):
                               verbose_name='آواتار',
                               help_text='حداکثر سایز عکس باید {} باشد'.format(
                                   filesizeformat(settings.MAX_UPLOAD_IMAGE_SIZE)))
-    supporters = models.ManyToManyField(User, blank=True, related_name='supported_topics', verbose_name='پشتیبانان')
     is_recommended = models.BooleanField(verbose_name='پیشنهادی', default=False,
                                          help_text='در صورت فعال بودن این گزینه آدرس بخش مورد نظر در صفحه اصلی نمایش '
                                                    'داده خواهد شد')
@@ -55,6 +57,20 @@ class Topic(models.Model):
 @receiver(pre_delete, sender=Topic)
 def topic_delete(sender, instance, **kwargs):
     instance.avatar.delete(False)
+
+
+class Admin(models.Model):
+    title = models.CharField(max_length=100, verbose_name='عنوان')
+    topic = models.ForeignKey(to=Topic, on_delete=models.PROTECT, related_name='admins')
+    users = models.ManyToManyField(to=User, blank=True, verbose_name='ادمین ها')
+
+    def __str__(self):
+        return self.title
+    
+    class Meta:
+        ordering = ['title']
+        verbose_name = 'ادمین'
+        verbose_name_plural = 'ادمین ها'
 
 
 WAITING_FOR_ANSWER = '1'
@@ -78,6 +94,28 @@ PRIORITY_CHOICES = [
 ]
 
 
+class Section(models.Model):
+    topic = models.ForeignKey(to=Topic, on_delete=models.PROTECT, verbose_name='متعلق به بخش')
+    admin = models.ForeignKey(to=Admin, on_delete=models.RESTRICT, verbose_name='گروه مسئولین این زیربخش')
+    title = models.CharField(max_length=100, verbose_name='عنوان')
+    description = models.TextField(verbose_name='توضیحات', null=True, blank=True)
+    is_active = models.BooleanField(verbose_name='فعال', default=True,
+                                    help_text='به جای حذف زیر بخش، این گزینه را غیر فعال کنید')
+    avatar = models.FileField(upload_to=section_image_directory_path, null=True, blank=True,
+                              validators=[FileExtensionValidator(VALID_AVATAR_EXTENSION), validate_image_size],
+                              verbose_name='آواتار',
+                              help_text='حداکثر سایز عکس باید {} باشد'.format(
+                                  filesizeformat(settings.MAX_UPLOAD_IMAGE_SIZE)))
+    
+    def __str__(self):
+        return self.title
+    
+    class Meta:
+        ordering = ['title']
+        verbose_name = 'زیر بخش'
+        verbose_name_plural = 'زیر بخش ها'
+
+
 class Ticket(models.Model):
     creator = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name='سازنده')
     title = models.CharField(max_length=100, verbose_name='عنوان')
@@ -85,7 +123,8 @@ class Ticket(models.Model):
     status = models.CharField(choices=STATUS_CHOICES, default=WAITING_FOR_ANSWER, verbose_name='وضعیت', max_length=1)
     last_update = models.DateTimeField(auto_now=True, verbose_name='زمان آخرین تغییرات')
     priority = models.CharField(choices=PRIORITY_CHOICES, verbose_name='اولویت', max_length=1)
-    topic = models.ForeignKey(Topic, on_delete=models.PROTECT, verbose_name='بخش مربوطه')
+    section = models.ForeignKey(to=Section, on_delete=models.PROTECT, verbose_name='زیر بخش مربوطه')
+    admin = models.ForeignKey(to=Admin, on_delete=models.RESTRICT, verbose_name='ادمین ها')
     tags = models.TextField('تگ ها', blank=True, default='')
 
     def __str__(self):
@@ -95,6 +134,22 @@ class Ticket(models.Model):
         ordering = ['-last_update']
         verbose_name = 'تیکت'
         verbose_name_plural = 'تیکت ها'
+
+
+class TicketHistory(models.Model):
+    ticket = models.ForeignKey(to=Ticket, on_delete=models.PROTECT, verbose_name='تیکت')
+    admin = models.ForeignKey(to=Admin, on_delete=models.RESTRICT, verbose_name='ادمین')
+    section = models.ForeignKey(to=Section, on_delete=models.PROTECT, verbose_name='زیر بخش')
+    operator = models.ForeignKey(to=User, on_delete=models.PROTECT, verbose_name='ادمین مسئول')
+    date = models.DateTimeField(verbose_name='زمان ایجاد', auto_now_add=True)
+
+    def __str__(self):
+        return str(self.id)
+    
+    class Meta:
+        ordering = ['-date']
+        verbose_name = 'تاریخچه تیکت'
+        verbose_name_plural = 'تاریخچه تیکت ها'
 
 
 class Message(models.Model):

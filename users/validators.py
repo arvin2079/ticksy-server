@@ -1,5 +1,7 @@
 import re
 
+from django.core.exceptions import ValidationError
+
 
 def validate_email(value):
     if re.match(r'^([A-Z|a-z|0-9](\.|_){0,1})+[A-Z|a-z|0-9]\@([A-Z|a-z|0-9])+((\.){0,1}[A-Z|a-z|0-9]){2}\.[a-z]{2,3}$',

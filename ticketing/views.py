@@ -1,11 +1,13 @@
-from datetime import timedelta
+from django.core.exceptions import ValidationError
+from ticketing.models import Section, TicketHistory
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, filters, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.pagination import PageNumberPagination
-from .permissions import IsIdentified, IsOwner, IsTicketOwnerOrTopicOwner, IsSupporterOrOwnerOrTicketCreator
+from .permissions import IsIdentified, IsOwner, IsTicketAdminOrCreator, HasChangeTicketPermission, \
+    IsSupporterOrOwnerOrTicketCreator, HasAccessToRoll
 from .swagger import *
 from .filters import TicketFilter
 from drf_yasg.utils import swagger_auto_schema
@@ -30,15 +32,21 @@ class TopicListCreateAPIView(generics.ListCreateAPIView):
         return self.create(request, *args, **kwargs)
 
     def get_queryset(self):
-        return Topic.objects.filter((Q(creator=self.request.user) | Q(supporters__in=[self.request.user])) & Q(
+        return Topic.objects.filter((Q(creator=self.request.user) | Q(admins__users__in=[self.request.user])) & Q(
             is_active=True)).distinct().order_by('-id')
 
 
 class TopicRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TopicSerializer
-    permission_classes = [IsAuthenticated]
-    lookup_field = 'slug'
-    http_method_names = ['get', 'patch', 'delete']
+    permission_classes = [IsAuthenticated, IsOwner]
+    lookup_field = 'id'
+    http_method_names = ['get', 'put', 'patch', 'delete']
+
+    def get_object(self):
+        obj = get_object_or_404(Topic, id=self.kwargs[self.lookup_field])
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            self.check_object_permissions(self.request, obj)
+        return obj
 
     @swagger_auto_schema(
         operation_description='Searches for a topic and returns the topic that has a slug exactly matched with the url slug(if exist).\nmethod: GET\nurl: /topics/\<slug\>\nexample: /topics/amoozesh-khu',
@@ -53,21 +61,109 @@ class TopicRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
         return self.partial_update(request, *args, **kwargs)
 
     def get_queryset(self):
-        return Topic.objects.filter(is_active=True).distinct()
-
-    def get_object(self):
-        queryset = self.filter_queryset(self.get_queryset())
-        filter_kwargs = {self.lookup_field: self.kwargs[self.lookup_field]}
-        obj = get_object_or_404(queryset, **filter_kwargs)
-        return obj
+        return Topic.objects.filter(Q(is_active=True)).distinct()
 
     @swagger_auto_schema(
         operation_description='Deletes the Topic.\nmethod: DELETE\nurl: /topics/\<slug\>\nexample: /topics/amoozesh-khu',
         responses=delete_topic_dictionary_response)
-    def delete(self, request, slug=None):
+    def delete(self, request, id):
         instance = self.get_object()
         instance.is_active = False
         instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TopicAdminsListCreateAPIView(generics.ListCreateAPIView):
+    serializer_class = TopicAdminsSerializer
+    permission_classes = [IsAuthenticated, HasAccessToRoll]
+    pagination_class = None
+    http_method_names = ['get', 'post']
+
+    def get_queryset(self):
+        topic = get_object_or_404(Topic, id=self.kwargs['id'], is_active=True)
+        return Admin.objects.filter(Q(topic=topic)).distinct()
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, context={'request':request, 'id':self.kwargs['id']})
+        serializer.is_valid(raise_exception=True)
+        # self.check_object_permissions(self.request, serializer.data)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class AdminRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = TopicAdminsSerializer
+    permission_classes = [IsAuthenticated, IsOwner]
+    lookup_field = 'roleid'
+    http_method_names = ['get', 'put', 'patch', 'delete']
+
+    def get_object(self):
+        obj = get_object_or_404(Admin, id=self.kwargs['roleid'], topic__id=self.kwargs['id'], topic__is_active=True)
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            self.check_object_permissions(self.request, obj)
+        return obj
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial, context={'id': self.kwargs['id'], 'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+    
+    def delete(self, request, id, roleid):
+        instance = self.get_object()
+        if Section.objects.filter(Q(admin=instance)):
+            ValidationError(message={'message': 'نمیتوان این گروه را حذف کرد چون در یک یا چند زیربخش استفاده شده است.'})
+        if Ticket.objects.filter(Q(admin=instance)):
+            ValidationError(message={'message': 'نمیتوان این گروه را حذف کرد چون در یک یا چند تیکت استفاده شده است.'})
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SectionListCreateAPIView(generics.ListCreateAPIView):
+    serializer_class = SectionsSerializer
+    permission_classes = [IsAuthenticated, IsOwner]
+    http_method_names = ['get', 'post']
+
+    def get_queryset(self):
+        return Section.objects.filter(Q(topic__id=self.kwargs['id']) & Q(is_active=True)).distinct()
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, context={'request':request, 'id':self.kwargs['id']})
+        serializer.is_valid(raise_exception=True)
+        # self.check_object_permissions(self.request, serializer.data)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class SectionRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = SectionSerializer
+    permission_classes = [IsAuthenticated, IsOwner]
+    lookup_field = 'secid'
+    http_method_names = ['get', 'put', 'patch', 'delete']
+
+    def get_object(self):
+        obj = get_object_or_404(Section, id=self.kwargs['secid'], is_active=True)
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            self.check_object_permissions(self.request, obj)
+        return obj
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial, context={'request': request, 'id': self.kwargs['id']})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if Ticket.objects.filter(Q(section=instance)) or TicketHistory.objects.filter(Q(section=instance)):
+            instance.is_active = False
+            instance.save()
+        else:
+            instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -97,28 +193,11 @@ class EmailListAPIView(generics.ListAPIView):
         return Response(serializer.data)
 
 
-class TicketListAPIView(generics.ListAPIView):
-    serializer_class = TicketSerializer
-    permission_classes = [IsAuthenticated]
-    search_fields = ['id', 'title']
-    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    filterset_class = TicketFilter
-    http_method_names = ['get']
-
-    @swagger_auto_schema(
-        operation_description='Returns a list of Tickets that belong to the user.\nmethod: GET\nurl: /tickets/?search=searchtext&status=1&page=1\nexample: tickets/?search=1&status=2&page=1\nOptional search field in the url, will search on \"id\" and \"title\".\nOptional status, filters the results based on the status field in the model (status can have \{0, 1, 2, 3, 4\} values)\nIn status, 0 means no filter, others mean status field in the model has to be equal to status in the url',
-        responses=get_ticket_dictionary_response)
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
-
-    def get_queryset(self):
-        return Ticket.objects.filter(creator=self.request.user)
-
-
 class TicketListCreateAPIView(generics.ListCreateAPIView):
-    serializer_class = TicketSerializer
+    serializer_class = TicketsSerializer
     permission_classes = [IsAuthenticated]
     search_fields = ['id', 'title']
+    http_method_names = ['get', 'post']
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     filterset_class = TicketFilter
 
@@ -133,38 +212,42 @@ class TicketListCreateAPIView(generics.ListCreateAPIView):
         return super(TicketListCreateAPIView, self).get(request, *args, **kwargs)
 
     def get_queryset(self):
-        return Ticket.objects.filter(Q(topic__slug=self.kwargs.get('slug')) & (
-                    Q(topic__creator=self.request.user) | Q(topic__supporters__in=[self.request.user])))
+        return Ticket.objects.filter(Q(creator=self.request.user) | (Q(admin__users__in=[self.request.user]))).distinct()
 
 
-class TicketRetriveAPIView(generics.RetrieveAPIView):
+class TicketRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
     serializer_class = TicketSerializer
-    permission_classes = [IsAuthenticated]
-
+    permission_classes = [IsAuthenticated, HasChangeTicketPermission]
+    http_method_names = ['get', 'patch']
+    
     def get_object(self):
-        return Ticket.objects.filter(id=self.kwargs.get('id')).first()
+        return get_object_or_404(Ticket, id=self.kwargs.get('id'))
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, context={'request': request, 'id': self.kwargs.get('id')})
+        return Response(serializer.data)
 
 
-class MessageListCreateAPIView(generics.ListCreateAPIView):
+class MessageCreateAPIView(generics.CreateAPIView):
     serializer_class = MessageSerializer
-    permission_classes = [IsAuthenticated, IsTicketOwnerOrTopicOwner]
-    pagination_class = None
-    http_method_names = ['get', 'post']
+    permission_classes = [IsAuthenticated, IsTicketAdminOrCreator]
+    http_method_names = ['post']
 
-    @swagger_auto_schema(
-        operation_description='Returns a list of Messages that belong to the inserted Ticket id.\nmethod: GET\nurl: /tickets/\<id\>\nexample: /tickets/18/',
-        responses=get_message_dictionary_response)
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, context={'request': request, 'id': self.kwargs.get('id')})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @swagger_auto_schema(operation_id='topics_tickets_message_create',
-                         operation_description='Creates a new Message and relates it to the Ticket that It\'s id is inserted in the url.\nmethod: POST\nurl: /tickets/\<id\>\nexample: /tickets/18/',
-                         responses=post_message_dictionary_response, request_body=post_message_dictionary_request_body)
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
+
+class TopicsListAPIView(generics.ListAPIView):
+    serializer_class = TopicAllDetailSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['get']
 
     def get_queryset(self):
-        return Message.objects.filter(Q(ticket=self.kwargs.get('id'))).distinct().order_by('id')
+        return Topic.objects.all()
 
 
 class MessageUpdateAPIView(generics.UpdateAPIView):
@@ -183,7 +266,9 @@ class MessageUpdateAPIView(generics.UpdateAPIView):
         return Message.objects.filter(id=self.kwargs.get('id'))
 
     def get_object(self):
-        return get_object_or_404(self.get_queryset())
+        obj = get_object_or_404(self.get_queryset())
+        self.check_object_permissions(self.request, obj)
+        return obj
 
 
 class GetRecommendedTopicsAPIView(generics.ListAPIView):
