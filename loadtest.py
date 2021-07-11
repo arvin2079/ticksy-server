@@ -30,6 +30,19 @@ class QuickStartUser(HttpUser):
                 self.user_id = response.json()["user_id"]
                 self.header = {"Authorization": "token " + self.token}
     
+    # @task(5)
+    # def user_create(self):
+    #     self.client.post('users/api/signup/', data={
+    #         "email": f"m{randint(0,100000)}{randint(0,100000)}{randint(0,100000)}{randint(0,100000)}{randint(0,100000)}@gmail.com",
+    #         "first_name": f"علی {num}",
+    #         "last_name": f"اکبری {num}",
+    #         "password": "fds;kerw,89757_+2@sfdtgD"
+    #     })
+    
+    @task(5)
+    def user_get(self):
+        self.client.get('users/api/identity/', headers=self.header)
+    
     @task(5)
     def topic_list(self):
         self.client.get("topic/", headers=self.header)
@@ -50,7 +63,7 @@ class QuickStartUser(HttpUser):
         global topic_ids
         if len(topic_ids) > 0:
             id = topic_ids[randint(0, len(topic_ids) - 1)]
-            self.client.get(f"topic/{id}/", headers=self.header)
+            self.client.get(f"topic/{id}/", headers=self.header, name="topic/(-id-)/")
     
     @task(1)
     def topic_destroy(self):
@@ -58,7 +71,19 @@ class QuickStartUser(HttpUser):
         if len(topic_ids) >= 20:
             id = topic_ids[randint(0, len(topic_ids) - 1)]
             topic_ids.remove(id)
-            self.client.delete(f"topic/{id}/", headers=self.header)
+            self.client.delete(f"topic/{id}/", headers=self.header, name="topic/(-id-)/")
+    
+    @task(5)
+    def topic_update(self):
+        global topic_ids, title, description, num
+        if len(topic_ids) > 0:
+            id = topic_ids[randint(0, len(topic_ids) - 1)]
+            self.client.put(f"topic/{id}/", data={
+              "title": title.format(num),
+              "description": description.format(num),
+              "avatar": None
+              }, headers=self.header,
+              name="topic/(-id-)/")
     
     @task(5)
     def role_create(self):
@@ -68,7 +93,7 @@ class QuickStartUser(HttpUser):
             with self.client.post(f"topic/{id}/role/", data={
                 "title": title.format(num),
                 "users": [1, 2, 3]
-            }, headers=self.header) as response:
+            }, headers=self.header, name="topic/(-id-)/role/") as response:
                 if id in admins.keys() and len(admins[id]) > 0:
                     admins[id].append(response.json()['id'])
                 else:
@@ -83,7 +108,9 @@ class QuickStartUser(HttpUser):
         global topic_ids
         if len(topic_ids) >= 0:
             id = topic_ids[randint(0, len(topic_ids) - 1)]
-            self.client.get(f"topic/{id}/role/", headers=self.header)
+            self.client.get(f"topic/{id}/role/", 
+                headers=self.header,
+                name="topic/(-id-)/role/")
     
     @task(10)
     def role_retrieve(self):
@@ -92,7 +119,9 @@ class QuickStartUser(HttpUser):
             id = topic_ids[randint(0, len(topic_ids) - 1)]
             if id in roles.keys() and len(roles[id]) > 0:
                 roleid = roles[id][randint(0, len(roles[id]) - 1)]
-                self.client.get(f"topic/{id}/role/{roleid}/", headers=self.header)
+                self.client.get(f"topic/{id}/role/{roleid}/",
+                    headers=self.header,
+                    name="topic/(-id-)/role/(-roleid-)/")
     
     @task(1)
     def role_destroy(self):
@@ -101,7 +130,21 @@ class QuickStartUser(HttpUser):
             id = topic_ids[randint(0, len(topic_ids) - 1)]
             if id in roles.keys() and len(roles[id]) > 0:
                 roleid = roles[id][randint(0, len(roles[id]) - 1)]
-                self.client.delete(f"topic/{id}/role/{roleid}/", headers=self.header)
+                self.client.delete(f"topic/{id}/role/{roleid}/", 
+                    headers=self.header,
+                    name="topic/(-id-)/role/(-roleid-)/")
+    
+    @task(5)
+    def role_update(self):
+        global topic_ids, roles, title, num
+        if len(topic_ids) >= 0:
+            id = topic_ids[randint(0, len(topic_ids) - 1)]
+            if id in roles.keys() and len(roles[id]) > 0:
+                roleid = roles[id][randint(0, len(roles[id]) - 1)]
+                self.client.put(f"topic/{id}/role/{roleid}/", data={
+                "title": title.format(num),
+                "users": [3, 4]
+            }, headers=self.header, name="topic/(-id-)/role/(-roleid-)/")
     
     @task(5)
     def category_create(self):
@@ -115,7 +158,7 @@ class QuickStartUser(HttpUser):
                     "description": description.format(num),
                     "admin": admin_id,
                     "avatar": None
-                }, headers=self.header) as response:
+                }, headers=self.header, name="topic/(-id-)/category/") as response:
                     if id in categories and len(categories[id]) > 0:
                         categories[id].append(response.json()['id'])
                     else:
@@ -126,7 +169,9 @@ class QuickStartUser(HttpUser):
         global topic_ids, roles, title, description, num, admins, categories
         if len(topic_ids) >= 0:
             id = topic_ids[randint(0, len(topic_ids) - 1)]
-            self.client.get(f"topic/{id}/category/", headers=self.header)
+            self.client.get(f"topic/{id}/category/", 
+                headers=self.header,
+                name="topic/(-id-)/category/")
     
     @task(10)
     def category_retrieve(self):
@@ -135,7 +180,9 @@ class QuickStartUser(HttpUser):
             id = topic_ids[randint(0, len(topic_ids) - 1)]
             if id in categories.keys() and len(categories[id]) > 0:
                 category_id = categories[id][randint(0, len(categories) - 1)]
-                self.client.get(f"topic/{id}/category/{category_id}/", headers=self.header)
+                self.client.get(f"topic/{id}/category/{category_id}/", 
+                    headers=self.header,
+                    name="topic/(-id-)/category/(-category_id-)/")
 
     @task(1)
     def category_destroy(self):
@@ -144,7 +191,24 @@ class QuickStartUser(HttpUser):
             id = topic_ids[randint(0, len(topic_ids) - 1)]
             if id in categories.keys() and len(categories[id]) > 0:
                 category_id = categories[id][randint(0, len(categories) - 1)]
-                self.client.delete(f"topic/{id}/category/{category_id}/", headers=self.header)
+                self.client.delete(f"topic/{id}/category/{category_id}/", 
+                    headers=self.header,
+                    name="topic/(-id-)/category/(-category_id-)/")
+    
+    @task(5)
+    def category_update(self):
+        global topic_ids, roles, title, description, num, admins, categories
+        if len(topic_ids) >= 0:
+            id = topic_ids[randint(0, len(topic_ids) - 1)]
+            if id in categories.keys() and len(categories[id]) > 0:
+                category_id = categories[id][randint(0, len(categories) - 1)]
+                admin_id = admins[id][randint(0, len(admins) - 1)]
+                self.client.put(f"topic/{id}/category/{category_id}/", data={
+                    "title": title.format(num),
+                    "description": description.format(num),
+                    "admin": admin_id,
+                    "avatar": None
+                }, headers=self.header, name="ticket/(-id-)/category/(-category_id-)/")
     
     @task(5)
     def ticket_create(self):
@@ -177,7 +241,9 @@ class QuickStartUser(HttpUser):
             id = topic_ids[randint(0, len(topic_ids) - 1)]
             category_id = categories[id][randint(0, len(categories) - 1)]
             ticket_id = tickets[randint(0, len(tickets) - 1)]
-            self.client.get(f'ticket/{ticket_id}/', headers=self.header)
+            self.client.get(f'ticket/{ticket_id}/', 
+                headers=self.header, 
+                name="ticket/(-id-)/")
 
     @task(5)
     def message_create(self):
@@ -187,7 +253,7 @@ class QuickStartUser(HttpUser):
             self.client.post(f'ticket/{ticket_id}/message/', data={
                 "text": description.format(num),
                 "attachments": []
-            }, headers=self.header)
+            }, headers=self.header, name="message/(-id-)/message/")
     
     @task(5)
     def rate(self):
@@ -196,4 +262,16 @@ class QuickStartUser(HttpUser):
             ticket_id = tickets[randint(0, len(tickets) - 1)]
             self.client.patch(f'message/{ticket_id}/', data={
                 "rate": randint(1, 5)
-            }, headers=self.header)
+            }, headers=self.header, name="message/(-id-)/")
+    
+    @task(10)
+    def topics(self):
+        self.client.get('all-topics/', headers=self.header)
+    
+    @task(10)
+    def emails(self):
+        self.client.get('email/', headers=self.header)
+    
+    @task(10)
+    def get_recommended_topics(self):
+        self.client.get('get-recommended-topics/', headers=self.header)
