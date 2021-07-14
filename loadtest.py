@@ -61,9 +61,9 @@ class QuickStartUser(HttpUser):
     @task(10)
     def topic_retrieve(self):
         global topic_ids
-        if len(topic_ids) > 0:
+        if len(topic_ids) > 1:
             id = topic_ids[randint(0, len(topic_ids) - 1)]
-            self.client.get(f"topic/{id}/", headers=self.header, name="topic/(-id-)/")
+            self.client.get(f"topic/{id}/", headers=self.header, name="/topic/(-id-)/")
     
     @task(1)
     def topic_destroy(self):
@@ -71,30 +71,30 @@ class QuickStartUser(HttpUser):
         if len(topic_ids) >= 20:
             id = topic_ids[randint(0, len(topic_ids) - 1)]
             topic_ids.remove(id)
-            self.client.delete(f"topic/{id}/", headers=self.header, name="topic/(-id-)/")
+            self.client.delete(f"topic/{id}/", headers=self.header, name="/topic/(-id-)/")
     
     @task(5)
     def topic_update(self):
         global topic_ids, title, description, num
-        if len(topic_ids) > 0:
+        if len(topic_ids) > 1:
             id = topic_ids[randint(0, len(topic_ids) - 1)]
             self.client.put(f"topic/{id}/", data={
               "title": title.format(num),
               "description": description.format(num),
               "avatar": None
               }, headers=self.header,
-              name="topic/(-id-)/")
+              name="/topic/(-id-)/")
     
     @task(5)
     def role_create(self):
         global topic_ids, roles, title, num, admins
-        if len(topic_ids) >= 0:
+        if len(topic_ids) > 1:
             id = topic_ids[randint(0, len(topic_ids) - 1)]
             with self.client.post(f"topic/{id}/role/", data={
                 "title": title.format(num),
                 "users": [1, 2, 3]
-            }, headers=self.header, name="topic/(-id-)/role/") as response:
-                if id in admins.keys() and len(admins[id]) > 0:
+            }, headers=self.header, name="/topic/(-id-)/role/") as response:
+                if id in admins.keys() and len(admins[id]) > 1:
                     admins[id].append(response.json()['id'])
                 else:
                     admins[id] = [response.json()['id']]
@@ -106,60 +106,61 @@ class QuickStartUser(HttpUser):
     @task(10)
     def role_list(self):
         global topic_ids
-        if len(topic_ids) >= 0:
+        if len(topic_ids) > 1:
             id = topic_ids[randint(0, len(topic_ids) - 1)]
             self.client.get(f"topic/{id}/role/", 
                 headers=self.header,
-                name="topic/(-id-)/role/")
+                name="/topic/(-id-)/role/")
     
     @task(10)
     def role_retrieve(self):
         global topic_ids, roles
-        if len(topic_ids) >= 0:
+        if len(topic_ids) > 1:
             id = topic_ids[randint(0, len(topic_ids) - 1)]
-            if id in roles.keys() and len(roles[id]) > 0:
+            if id in roles.keys() and len(roles[id]) > 1:
                 roleid = roles[id][randint(0, len(roles[id]) - 1)]
                 self.client.get(f"topic/{id}/role/{roleid}/",
                     headers=self.header,
-                    name="topic/(-id-)/role/(-roleid-)/")
+                    name="/topic/(-id-)/role/(-roleid-)/")
     
     @task(1)
     def role_destroy(self):
         global topic_ids, roles
-        if len(topic_ids) >= 0:
+        if len(topic_ids) > 1:
             id = topic_ids[randint(0, len(topic_ids) - 1)]
-            if id in roles.keys() and len(roles[id]) > 0:
+            if id in roles.keys() and len(roles[id]) > 1:
                 roleid = roles[id][randint(0, len(roles[id]) - 1)]
                 self.client.delete(f"topic/{id}/role/{roleid}/", 
                     headers=self.header,
-                    name="topic/(-id-)/role/(-roleid-)/")
+                    name="/topic/(-id-)/role/(-roleid-)/")
+                roles[id].remove(roleid)
     
     @task(5)
     def role_update(self):
         global topic_ids, roles, title, num
-        if len(topic_ids) >= 0:
+        if len(topic_ids) > 1:
             id = topic_ids[randint(0, len(topic_ids) - 1)]
-            if id in roles.keys() and len(roles[id]) > 0:
+            if id in roles.keys() and len(roles[id]) > 1:
                 roleid = roles[id][randint(0, len(roles[id]) - 1)]
                 self.client.put(f"topic/{id}/role/{roleid}/", data={
                 "title": title.format(num),
                 "users": [3, 4]
-            }, headers=self.header, name="topic/(-id-)/role/(-roleid-)/")
+            }, headers=self.header, name="/topic/(-id-)/role/(-roleid-)/")
     
     @task(5)
     def category_create(self):
         global topic_ids, roles, title, description, num, admins, categories
-        if len(topic_ids) >= 0:
+        if len(topic_ids) > 1:
             id = topic_ids[randint(0, len(topic_ids) - 1)]
-            if id in admins.keys() and len(admins[id]) > 0:
+            if id in admins.keys() and len(admins[id]) > 1:
                 admin_id = admins[id][randint(0, len(admins) - 1)]
                 with self.client.post(f"topic/{id}/category/", data={
                     "title": title.format(num),
                     "description": description.format(num),
                     "admin": admin_id,
                     "avatar": None
-                }, headers=self.header, name="topic/(-id-)/category/") as response:
-                    if id in categories and len(categories[id]) > 0:
+                }, headers=self.header, name="/topic/(-id-)/category/") as response:
+                    if id in categories and len(categories[id]) > 1:
                         categories[id].append(response.json()['id'])
                     else:
                         categories[id] = [response.json()['id']]
@@ -167,40 +168,40 @@ class QuickStartUser(HttpUser):
     @task(10)
     def category_list(self):
         global topic_ids, roles, title, description, num, admins, categories
-        if len(topic_ids) >= 0:
+        if len(topic_ids) > 1:
             id = topic_ids[randint(0, len(topic_ids) - 1)]
             self.client.get(f"topic/{id}/category/", 
                 headers=self.header,
-                name="topic/(-id-)/category/")
+                name="/topic/(-id-)/category/")
     
     @task(10)
     def category_retrieve(self):
         global topic_ids, roles, title, description, num, admins, categories
-        if len(topic_ids) >= 0:
+        if len(topic_ids) > 1:
             id = topic_ids[randint(0, len(topic_ids) - 1)]
-            if id in categories.keys() and len(categories[id]) > 0:
+            if id in categories.keys() and len(categories[id]) > 1:
                 category_id = categories[id][randint(0, len(categories) - 1)]
                 self.client.get(f"topic/{id}/category/{category_id}/", 
                     headers=self.header,
-                    name="topic/(-id-)/category/(-category_id-)/")
+                    name="/topic/(-id-)/category/(-category_id-)/")
 
     @task(1)
     def category_destroy(self):
         global topic_ids, roles, title, description, num, admins, categories
-        if len(topic_ids) >= 0:
+        if len(topic_ids) > 1:
             id = topic_ids[randint(0, len(topic_ids) - 1)]
-            if id in categories.keys() and len(categories[id]) > 0:
+            if id in categories.keys() and len(categories[id]) > 1:
                 category_id = categories[id][randint(0, len(categories) - 1)]
                 self.client.delete(f"topic/{id}/category/{category_id}/", 
                     headers=self.header,
-                    name="topic/(-id-)/category/(-category_id-)/")
+                    name="/topic/(-id-)/category/(-category_id-)/")
     
     @task(5)
     def category_update(self):
         global topic_ids, roles, title, description, num, admins, categories
-        if len(topic_ids) >= 0:
+        if len(topic_ids) > 1:
             id = topic_ids[randint(0, len(topic_ids) - 1)]
-            if id in categories.keys() and len(categories[id]) > 0:
+            if id in categories.keys() and len(categories[id]) > 1:
                 category_id = categories[id][randint(0, len(categories) - 1)]
                 admin_id = admins[id][randint(0, len(admins) - 1)]
                 self.client.put(f"topic/{id}/category/{category_id}/", data={
@@ -208,12 +209,12 @@ class QuickStartUser(HttpUser):
                     "description": description.format(num),
                     "admin": admin_id,
                     "avatar": None
-                }, headers=self.header, name="ticket/(-id-)/category/(-category_id-)/")
+                }, headers=self.header, name="/ticket/(-id-)/category/(-category_id-)/")
     
     @task(5)
     def ticket_create(self):
         global topic_ids, categories, tickets, title, num
-        if len(categories) > 0 and len(topic_ids) > 0:
+        if len(categories) > 1 and len(topic_ids) > 1:
             id = topic_ids[randint(0, len(topic_ids) - 1)]
             category_id = categories[id][randint(0, len(categories) - 1)]
             with self.client.post('ticket/', data={
@@ -229,7 +230,7 @@ class QuickStartUser(HttpUser):
     @task(10)
     def ticket_list(self):
         global topic_ids, categories, tickets, title, num
-        if len(categories) > 0 and len(topic_ids) > 0:
+        if len(categories) > 1 and len(topic_ids) > 1:
             id = topic_ids[randint(0, len(topic_ids) - 1)]
             category_id = categories[id][randint(0, len(categories) - 1)]
             self.client.get('ticket/', headers=self.header)
@@ -237,32 +238,32 @@ class QuickStartUser(HttpUser):
     @task(10)
     def ticket_retrieve(self):
         global topic_ids, categories, tickets, title, num
-        if len(categories) > 0 and len(topic_ids) > 0 and len(tickets) > 0:
+        if len(categories) > 1 and len(topic_ids) > 1 and len(tickets) > 1:
             id = topic_ids[randint(0, len(topic_ids) - 1)]
             category_id = categories[id][randint(0, len(categories) - 1)]
             ticket_id = tickets[randint(0, len(tickets) - 1)]
             self.client.get(f'ticket/{ticket_id}/', 
                 headers=self.header, 
-                name="ticket/(-id-)/")
+                name="/ticket/(-id-)/")
 
     @task(5)
     def message_create(self):
         global topic_ids, categories, description, tickets, title, num
-        if len(tickets) > 0:
+        if len(tickets) > 1:
             ticket_id = tickets[randint(0, len(tickets) - 1)]
             self.client.post(f'ticket/{ticket_id}/message/', data={
                 "text": description.format(num),
                 "attachments": []
-            }, headers=self.header, name="message/(-id-)/message/")
+            }, headers=self.header, name="/message/(-id-)/message/")
     
     @task(5)
     def rate(self):
         global topic_ids, categories, description, tickets, title, num
-        if len(tickets) > 0:
+        if len(tickets) > 1:
             ticket_id = tickets[randint(0, len(tickets) - 1)]
             self.client.patch(f'message/{ticket_id}/', data={
                 "rate": randint(1, 5)
-            }, headers=self.header, name="message/(-id-)/")
+            }, headers=self.header, name="/message/(-id-)/")
     
     @task(10)
     def topics(self):
