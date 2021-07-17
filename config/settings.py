@@ -112,8 +112,8 @@ REST_FRAMEWORK = {
 
     'DEFAULT_RENDERER_CLASSES': RENDERER,
 
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    # 'PAGE_SIZE': 10,
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 
     # 'DEFAULT_FILTER_BACKENDS': [
@@ -141,16 +141,6 @@ SPECTACULAR_SETTINGS = {
 #         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
-
-DATABASES = {
-    'default': {
-        "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.mysql"),
-        "NAME": os.environ.get("SQL_DATABASE", "ticksy_db"),
-        "USER": os.environ.get("SQL_USER", "ticksy"),
-        "PASSWORD": os.environ.get("SQL_PASSWORD", "Ticksy_1234"),
-        "HOST": os.environ.get("SQL_HOST", "localhost"),
-    }
-}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
