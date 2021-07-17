@@ -5,7 +5,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, filters, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.pagination import LimitOffsetPagination
 from .permissions import IsIdentified, IsOwner, IsTicketAdminOrCreator, HasChangeTicketPermission, \
     IsSupporterOrOwnerOrTicketCreator, HasAccessToRoll
 from .swagger import *
@@ -16,7 +16,7 @@ from drf_yasg.utils import swagger_auto_schema
 class TopicListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = TopicsSerializer
     permission_classes = [IsAuthenticated, IsIdentified]
-    pagination_class = PageNumberPagination
+    pagination_class = LimitOffsetPagination
     http_method_names = ['get', 'post']
 
     @swagger_auto_schema(
