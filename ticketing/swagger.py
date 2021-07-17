@@ -442,6 +442,10 @@ post_ticket_dictionary_request_body = openapi.Schema(
             type=openapi.TYPE_STRING,
             description='A string contains tags that separated by something'
         ),
+        'section': openapi.Schema(
+            type=openapi.TYPE_STRING,
+            description='section id is needed'
+        ),
         'attachments': openapi.Schema(
             type=openapi.TYPE_ARRAY,
             items=openapi.Schema(
