@@ -323,10 +323,6 @@ post_topic_dictionary_request_body = openapi.Schema(
             type=openapi.TYPE_STRING,
             description='Description of the topic'
         ),
-        'slug': openapi.Schema(
-            type=openapi.TYPE_STRING,
-            description='Slug of the topic'
-        ),
         'avatar': openapi.Schema(
             type=openapi.Schema(
                 type=openapi.TYPE_FILE,
