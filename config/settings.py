@@ -135,12 +135,15 @@ SPECTACULAR_SETTINGS = {
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+DATABASES = {
+    'default': {
+        "ENGINE": os.environ.get("SQL_ENGINE", "django.db.backends.mysql"),
+        "NAME": os.environ.get("SQL_DATABASE", "ticksy_db"),
+        "USER": os.environ.get("SQL_USER", "ticksy"),
+        "PASSWORD": os.environ.get("SQL_PASSWORD", "Ticksy_1234"),
+        "HOST": os.environ.get("SQL_HOST", "localhost"),
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
