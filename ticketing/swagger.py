@@ -323,10 +323,6 @@ post_topic_dictionary_request_body = openapi.Schema(
             type=openapi.TYPE_STRING,
             description='Description of the topic'
         ),
-        'slug': openapi.Schema(
-            type=openapi.TYPE_STRING,
-            description='Slug of the topic'
-        ),
         'avatar': openapi.Schema(
             type=openapi.Schema(
                 type=openapi.TYPE_FILE,
@@ -441,6 +437,10 @@ post_ticket_dictionary_request_body = openapi.Schema(
         'tags': openapi.Schema(
             type=openapi.TYPE_STRING,
             description='A string contains tags that separated by something'
+        ),
+        'section': openapi.Schema(
+            type=openapi.TYPE_STRING,
+            description='section id is needed'
         ),
         'attachments': openapi.Schema(
             type=openapi.TYPE_ARRAY,
