@@ -52,6 +52,9 @@ INSTALLED_APPS = [
     # django-filter, see: https://django-filter.readthedocs.io/en/latest/guide/rest_framework.html
     'django_filters',
 
+    # https://drf-spectacular.readthedocs.io/en/latest/readme.html
+    'drf_spectacular',
+
     # Project
     'users',
     'ticketing',
@@ -111,6 +114,7 @@ REST_FRAMEWORK = {
 
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 
     # 'DEFAULT_FILTER_BACKENDS': [
     #     'django_filters.rest_framework.DjangoFilterBackend',
@@ -118,6 +122,13 @@ REST_FRAMEWORK = {
     #     'market.filters.ProductOrderingFilter',
     # ]
 
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Ticksy API',
+    'DESCRIPTION': 'Ticksy description',
+    'VERSION': '2.0.0',
+    # OTHER SETTINGS
 }
 
 
