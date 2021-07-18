@@ -237,7 +237,7 @@ class MessageUpdateSerializer(serializers.ModelSerializer):
 class RecommendedTopicsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Topic
-        fields = ['title', 'description', 'url', 'avatar']
+        fields = ['title', 'description', 'url', 'avatar', 'id']
         read_only_fields = fields
         extra_kwargs = {
             'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'id'}
