@@ -113,7 +113,8 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': RENDERER,
 
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    # 'PAGE_SIZE': 10,
+    'PAGE_SIZE': 60,
+
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 
     # 'DEFAULT_FILTER_BACKENDS': [
