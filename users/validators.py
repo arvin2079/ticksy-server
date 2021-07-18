@@ -27,7 +27,8 @@ def validate_lastname(value):
 
 
 def is_persian(value):
-    if re.match(r'[۱۲۳۴۵۶۷۸۹۰ آابپتثجچحخدذرزژسشصضطظعغفقکگلمنوهی]+', value):
+   # if re.match(r'[۱۲۳۴۵۶۷۸۹۰ آابپتثجچحخدذرزژسشصضطظعغفقکگلمنوهی]+', value):
+    if re.match(r'[،پچجحخهعغفقثصضشسیبلاتنمکگوئدذرزطظژؤآإأءًٌٍَُِّ۱۲۳۴۵۶۷۸۹۰ \s]+$', value):
         return True
     return False
 
