@@ -5,7 +5,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, filters, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.pagination import LimitOffsetPagination
 from .permissions import IsIdentified, IsOwner, IsTicketAdminOrCreator, HasChangeTicketPermission, \
     IsSupporterOrOwnerOrTicketCreator, HasAccessToRoll
 from .swagger import *
@@ -16,7 +15,6 @@ from drf_yasg.utils import swagger_auto_schema
 class TopicListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = TopicsSerializer
     permission_classes = [IsAuthenticated, IsIdentified]
-    pagination_class = LimitOffsetPagination
     http_method_names = ['get', 'post']
 
     @swagger_auto_schema(
@@ -76,7 +74,6 @@ class TopicRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
 class TopicAdminsListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = TopicAdminsSerializer
     permission_classes = [IsAuthenticated, HasAccessToRoll]
-    pagination_class = None
     http_method_names = ['get', 'post']
 
     def get_queryset(self):
@@ -172,7 +169,6 @@ class EmailListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated, IsIdentified]
     search_fields = ['email']
     filter_backends = [filters.SearchFilter]
-    pagination_class = None
     http_method_names = ['get']
 
     @swagger_auto_schema(
