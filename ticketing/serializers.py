@@ -49,22 +49,18 @@ class TopicSerializer(TopicsSerializer):
 
 
 class TopicAdminsSerializer(AdminsFieldSerializer):
+    users = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.filter(Q(is_active=True) & (Q(identity__status=IDENTIFIED) | Q(is_superuser=True))),
+        many=True, write_only=True)
 
-    def to_internal_value(self, data):
-        self.fields['users'] = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(Q(is_active=True) & (Q(identity__status=IDENTIFIED) | Q(is_superuser=True))), many=True)
-        return super().to_internal_value(data)
-
-    def to_representation(self, instance):
-        self.fields['users'] = UserSerializerRestricted(many=True)
-        return super().to_representation(instance)
+    users_detail = UserSerializerRestricted(many=True, read_only=True)
 
     class Meta(AdminsFieldSerializer.Meta):
-        fields = ['id', 'title', 'users']
+        fields = ['id', 'title', 'users', 'users_detail']
 
     def create(self, validated_data):
-        validated_data['topic'] = Topic.objects.get(id=self.context['id'])
+        validated_data['topic'] = get_object_or_404(Topic, id=self.context['id'])
         instance = super().create(validated_data)
-        instance.save()
         return instance
 
 
@@ -98,19 +94,17 @@ class TopicAllDetailSerializer(TopicsSerializer):
 
 
 class SectionSerializer(serializers.ModelSerializer):
-    
-    def to_internal_value(self, data):
-        self.fields['admin'] = serializers.PrimaryKeyRelatedField(queryset=Admin.objects.filter(Q(topic__id=self.context['id'])))
-        return super().to_internal_value(data)
-
-    def to_representation(self, instance):
-        self.fields['admin'] = TopicAdminsSerializer(read_only=True)
-        return super().to_representation(instance)
+    admin = serializers.PrimaryKeyRelatedField(queryset=Admin.objects.all(), write_only=True)
+    admin_detail = TopicAdminsSerializer(read_only=True, source='admin')
 
     class Meta:
         model = Section
-        fields = ['id', 'title', 'description', 'admin', 'avatar']
-        read_only_fields = ['id']
+        fields = ['id', 'title', 'description', 'admin', 'admin_detail', 'avatar']
+
+    def validate_admin(self, value):
+        if value in Admin.objects.filter(Q(topic__id=self.context['id'])):
+            return value
+        raise serializers.ValidationError("ادمین باید مربوط به تاپیک باشد")
 
 
 class AttachmentSerializer(serializers.ModelSerializer):
