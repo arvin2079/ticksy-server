@@ -38,9 +38,8 @@ class TopicsSerializer(serializers.ModelSerializer):
         return ADMIN
 
     def create(self, validated_data):
+        validated_data['creator'] = self.context['request'].user
         instance = super().create(validated_data)
-        instance.creator = self.context['request'].user
-        instance.save()
         return instance
 
 
