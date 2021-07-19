@@ -405,16 +405,52 @@ class TestViews(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 401)
 
-    def test_TicketListCreateAPIView_get_200(self):
+    def test_TicketListCreateAPIView_get_200_1(self):
+        user = User.objects.get(email='first@test.com')
+        self.client.force_login(user)
+
+        url = reverse('ticket-list-create')
+
+        response = self.client.get(url, {'type': 1})
+        self.assertEqual(response.status_code, 200)
+
+    def test_TicketListCreateAPIView_get_200_2(self):
+        user = User.objects.get(email='first@test.com')
+        self.client.force_login(user)
+
+        url = reverse('ticket-list-create')
+
+        response = self.client.get(url, {'type': 2})
+        self.assertEqual(response.status_code, 200)
+
+    def test_TicketListCreateAPIView_get_200_3(self):
+        user = User.objects.get(email='second@test.com')
+        self.client.force_login(user)
+
+        url = reverse('ticket-list-create')
+
+        response = self.client.get(url, {'type': 1})
+        self.assertEqual(response.status_code, 200)
+
+    def test_TicketListCreateAPIView_get_200_4(self):
+        user = User.objects.get(email='second@test.com')
+        self.client.force_login(user)
+
+        url = reverse('ticket-list-create')
+
+        response = self.client.get(url, {'type': 2})
+        self.assertEqual(response.status_code, 200)
+
+    def test_TicketListCreateAPIView_get_400_1(self):
         user = User.objects.get(email='first@test.com')
         self.client.force_login(user)
 
         url = reverse('ticket-list-create')
 
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 400)
 
-    def test_TicketListCreateAPIView_post_400(self):
+    def test_TicketListCreateAPIView_post_400_2(self):
         user = User.objects.get(email='first@test.com')
         self.client.force_login(user)
 
@@ -431,7 +467,7 @@ class TestViews(TestCase):
         response = self.client.post(url, body)
         self.assertEqual(response.status_code, 400)
 
-    def test_TicketListCreateAPIView_post_400_2(self):
+    def test_TicketListCreateAPIView_post_400_3(self):
         user = User.objects.get(email='first@test.com')
         self.client.force_login(user)
 
@@ -702,7 +738,7 @@ class TestViews(TestCase):
         url = reverse('ticket-retrieve-update', args=[ticket.id, ])
 
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 200)
 
     def test_TicketRetrieveUpdateAPIView_get_403_2(self):
         user = User.objects.get(email='second@test.com')
@@ -713,7 +749,7 @@ class TestViews(TestCase):
         url = reverse('ticket-retrieve-update', args=[ticket.id, ])
 
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 200)
 
     def test_TicketRetrieveUpdateAPIView_get_200(self):
         user = User.objects.get(email='second@test.com')
