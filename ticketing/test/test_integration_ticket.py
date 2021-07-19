@@ -87,7 +87,7 @@ class TestIntegrationTicket(TestCase):
         ord_user_response = self.ordinary_client.post(url, body)
         self.assertEqual(ord_user_response.status_code, 201)
 
-        sup_user_response = self.supporter_client.get(url)
+        sup_user_response = self.supporter_client.get(url, {'type': 1})
         self.assertEqual(sup_user_response.status_code, 200)
 
         url = reverse('ticket-create', args=[topic.id, ])
