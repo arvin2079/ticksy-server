@@ -53,7 +53,7 @@ class TopicAdminsSerializer(AdminsFieldSerializer):
         queryset=User.objects.filter(Q(is_active=True) & (Q(identity__status=IDENTIFIED) | Q(is_superuser=True))),
         many=True, write_only=True)
 
-    users_detail = UserSerializerRestricted(many=True, read_only=True)
+    users_detail = UserSerializerRestricted(many=True, read_only=True, source='users')
 
     class Meta(AdminsFieldSerializer.Meta):
         fields = ['id', 'title', 'users', 'users_detail']
