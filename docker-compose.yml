@@ -17,6 +17,7 @@ services:
     volumes:
       - /srv/ticksy-api/media:/app/media
       - /srv/ticksy-api/static:/app/static
+      - /srv/ticksy-api/migrations:/app/ticketing/migrations
 
 networks:
   mysql-network:
