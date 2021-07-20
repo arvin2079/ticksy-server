@@ -107,7 +107,7 @@ class AdminRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
-    
+
     def delete(self, request, id, roleid):
         instance = self.get_object()
         if Section.objects.filter(Q(admin=instance)):
@@ -116,6 +116,20 @@ class AdminRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
             ValidationError(message={'message': 'نمیتوان این گروه را حذف کرد چون در یک یا چند تیکت استفاده شده است.'})
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TopicUsersListAPIView(generics.ListAPIView):
+    serializer_class = TopicUsersListSerializers
+    permission_classes = [IsAuthenticated, HasAccessToRoll]
+
+    def get_queryset(self):
+        topic = get_object_or_404(Topic, id=self.kwargs.get('id'))
+        admins = topic.admins.all()
+        admins_id = [i.id for i in admins]
+        z = User.objects.filter(Q(admin__in=admins_id) |
+                                   Q(id=topic.creator.id)).distinct()
+        return User.objects.filter(Q(admin__in=admins_id) |
+                                   Q(id=topic.creator.id)).distinct()
 
 
 class SectionListCreateAPIView(generics.ListCreateAPIView):
@@ -145,7 +159,7 @@ class SectionRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView)
         if self.request.method in ['PUT', 'PATCH', 'DELETE']:
             self.check_object_permissions(self.request, obj)
         return obj
-    
+
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
@@ -215,10 +229,10 @@ class TicketRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
     serializer_class = TicketSerializer
     permission_classes = [IsAuthenticated, HasChangeTicketPermission]
     http_method_names = ['get', 'patch']
-    
+
     def get_object(self):
         return get_object_or_404(Ticket, id=self.kwargs.get('id'))
-    
+
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance, context={'request': request, 'id': self.kwargs.get('id')})
