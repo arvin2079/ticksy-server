@@ -126,8 +126,6 @@ class TopicUsersListAPIView(generics.ListAPIView):
         topic = get_object_or_404(Topic, id=self.kwargs.get('id'))
         admins = topic.admins.all()
         admins_id = [i.id for i in admins]
-        z = User.objects.filter(Q(admin__in=admins_id) |
-                                   Q(id=topic.creator.id)).distinct()
         return User.objects.filter(Q(admin__in=admins_id) |
                                    Q(id=topic.creator.id)).distinct()
 

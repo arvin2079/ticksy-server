@@ -1,6 +1,8 @@
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from ticketing.models import Admin, IN_PROGRESS, Section, TicketHistory, Topic, Ticket, Message, Attachment, ANSWERED, WAITING_FOR_ANSWER
 from users.serializers import UserSerializerRestricted
@@ -66,12 +68,27 @@ class TopicAdminsSerializer(AdminsFieldSerializer):
 
 class TopicUsersListSerializers(serializers.ModelSerializer):
 
-    admin_set = AdminsFieldSerializer(many=True, read_only=True)
+    # admin_set = AdminsFieldSerializer(many=True, read_only=True)
+    admin_set = serializers.SerializerMethodField(read_only=True)
+    is_creator = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'avatar', 'admin_set']
+        fields = ['id', 'first_name', 'last_name', 'email', 'avatar', 'admin_set', 'is_creator']
         read_only_fields = fields
+
+    @extend_schema_field(AdminsFieldSerializer())
+    def get_admin_set(self, obj):
+        admins = obj.admin_set.filter(topic=self.context.get('view').kwargs.get('id'))
+        serialized_admins = AdminsFieldSerializer(many=True, instance=admins)
+        return serialized_admins.data
+
+    @extend_schema_field(OpenApiTypes.BOOL)
+    def get_is_creator(self, obj):
+        topic_creator = get_object_or_404(Topic, id=self.context.get('view').kwargs.get('id')).creator
+        return topic_creator == obj
+
+
 
 
 class SectionsSerializer(serializers.ModelSerializer):
