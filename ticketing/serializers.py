@@ -64,6 +64,16 @@ class TopicAdminsSerializer(AdminsFieldSerializer):
         return instance
 
 
+class TopicUsersListSerializers(serializers.ModelSerializer):
+
+    admin_set = AdminsFieldSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'email', 'avatar', 'admin_set']
+        read_only_fields = fields
+
+
 class SectionsSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
