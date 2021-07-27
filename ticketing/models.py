@@ -115,6 +115,15 @@ class Section(models.Model):
         verbose_name = 'زیر بخش'
         verbose_name_plural = 'زیر بخش ها'
 
+    def get_last_ticket_date(self):
+        last_ticket = self.ticket_set.first()
+        if last_ticket:
+            return last_ticket.last_update
+        return ''
+
+    def get_open_ticket_count(self):
+        return self.ticket_set.exclude(status=CLOSED).count()
+
 
 class Ticket(models.Model):
     creator = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name='سازنده')
