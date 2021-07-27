@@ -93,17 +93,18 @@ class TopicUsersListSerializers(serializers.ModelSerializer):
 
 class SectionsSerializer(serializers.ModelSerializer):
 
-    def to_internal_value(self, data):
-        self.fields['admin'] = serializers.PrimaryKeyRelatedField(queryset=Admin.objects.filter(Q(topic__id=self.context['id'])))
-        return super().to_internal_value(data)
+    get_last_ticket_date = serializers.DateTimeField(read_only=True)
+    get_open_ticket_count = serializers.IntegerField(read_only=True)
+    admin = serializers.PrimaryKeyRelatedField(queryset=Admin.objects.all(), write_only=True)
+    admin_detail = AdminsFieldSerializer(read_only=True, source='admin')
 
-    def to_representation(self, instance):
-        self.fields['admin'] = AdminsFieldSerializer(read_only=True)
-        return super().to_representation(instance)
+    def to_internal_value(self, data):
+        self.fields['admin'] = serializers.PrimaryKeyRelatedField(queryset=Admin.objects.filter(Q(topic__id=self.context['id'])), write_only=True)
+        return super().to_internal_value(data)
 
     class Meta:
         model = Section
-        fields = ['id', 'title', 'description', 'admin', 'avatar']
+        fields = ['id', 'title', 'description', 'admin', 'admin_detail', 'avatar', 'get_open_ticket_count', 'get_last_ticket_date']
         read_only_fields = ['id']
     
     def create(self, validated_data):
