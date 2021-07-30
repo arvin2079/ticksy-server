@@ -211,19 +211,16 @@ class TicketHistorySerializer(serializers.ModelSerializer):
 
 
 class TicketSerializer(TicketsSerializer):
-    section = SectionSerializer(read_only=True)
+    section_detail = SectionSerializer(read_only=True, source='section')
     message_set = MessageSerializer(many=True, read_only=True)
     tickethistory_set = TicketHistorySerializer(many=True, read_only=True)
-    admin = AdminsFieldSerializer(read_only=True)
-
-    def to_internal_value(self, data):
-        self.fields['section'] = serializers.PrimaryKeyRelatedField(queryset=Section.objects.filter(Q(is_active=True)))
-        self.fields['admin'] = serializers.PrimaryKeyRelatedField(queryset=Admin.objects.all())
-        return super().to_internal_value(data)
+    admin_detail = AdminsFieldSerializer(read_only=True, source='admin')
+    admin = serializers.PrimaryKeyRelatedField(queryset=Admin.objects.all())  # todo: need to validate
+    section = serializers.PrimaryKeyRelatedField(queryset=Section.objects.filter(is_active=True))
 
     class Meta(TicketsSerializer.Meta):
-        fields = ['id', 'title', 'status', 'priority', 'section', 'admin', 'tags', 'message_set', 'tickethistory_set', 'last_update', 'creation_date']
-        read_only_fields = ['id', 'message_set']
+        fields = ['id', 'title', 'status', 'priority', 'section', 'admin', 'tags', 'message_set', 'tickethistory_set',
+                  'last_update', 'creation_date', 'section_detail', 'admin_detail']
 
     def update(self, instance, validated_data):
         if validated_data['admin'] not in validated_data['section'].topic.admins.all():

@@ -253,6 +253,8 @@ class TopicsListAPIView(generics.ListAPIView):
     serializer_class = TopicAllDetailSerializer
     permission_classes = [IsAuthenticated]
     http_method_names = ['get']
+    search_fields = ['title']
+    filter_backends = [filters.SearchFilter]
 
     def get_queryset(self):
         return Topic.objects.all()
