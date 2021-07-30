@@ -225,7 +225,7 @@ class TicketSerializer(TicketsSerializer):
 
     @extend_schema_field(SectionSerializer(many=True))
     def get_other_sections(self, obj):
-        other_sections = Section.objects.filter(Q(topic=obj.section.topic), ~Q(topic__section=obj.section))
+        other_sections = Section.objects.filter(Q(topic=obj.section.topic), ~Q(id=obj.section.id))
         ser = SectionSerializer(instance=other_sections, many=True)
         return ser.data
 
