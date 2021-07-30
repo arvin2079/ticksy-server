@@ -211,16 +211,23 @@ class TicketHistorySerializer(serializers.ModelSerializer):
 
 
 class TicketSerializer(TicketsSerializer):
+    other_sections = serializers.SerializerMethodField(read_only=True)
     section_detail = SectionSerializer(read_only=True, source='section')
     message_set = MessageSerializer(many=True, read_only=True)
     tickethistory_set = TicketHistorySerializer(many=True, read_only=True)
     admin_detail = AdminsFieldSerializer(read_only=True, source='admin')
-    admin = serializers.PrimaryKeyRelatedField(queryset=Admin.objects.all())  # todo: need to validate
-    section = serializers.PrimaryKeyRelatedField(queryset=Section.objects.filter(is_active=True))
+    admin = serializers.PrimaryKeyRelatedField(queryset=Admin.objects.all(), write_only=True)  # todo: need to validate
+    section = serializers.PrimaryKeyRelatedField(queryset=Section.objects.filter(is_active=True), write_only=True)
 
     class Meta(TicketsSerializer.Meta):
         fields = ['id', 'title', 'status', 'priority', 'section', 'admin', 'tags', 'message_set', 'tickethistory_set',
-                  'last_update', 'creation_date', 'section_detail', 'admin_detail']
+                  'last_update', 'creation_date', 'section_detail', 'admin_detail', 'other_sections']
+
+    @extend_schema_field(SectionSerializer(many=True))
+    def get_other_sections(self, obj):
+        other_sections = Section.objects.filter(Q(topic=obj.section.topic), ~Q(topic__section=obj.section))
+        ser = SectionSerializer(instance=other_sections, many=True)
+        return ser.data
 
     def update(self, instance, validated_data):
         if validated_data['admin'] not in validated_data['section'].topic.admins.all():
