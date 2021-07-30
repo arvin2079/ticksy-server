@@ -14,7 +14,7 @@ class TicketFilter(filters.FilterSet):
 
     class Meta:
         model = Ticket
-        fields = ['status', 'section__topic']
+        fields = ['status', 'section__topic', 'section']
 
     def filter_type(self, queryset, name, value):
         if value == 1:
