@@ -42,8 +42,7 @@ class TopicRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         obj = get_object_or_404(Topic, id=self.kwargs[self.lookup_field])
-        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
-            self.check_object_permissions(self.request, obj)
+        self.check_object_permissions(self.request, obj)
         return obj
 
     @swagger_auto_schema(
