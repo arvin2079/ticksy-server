@@ -42,8 +42,7 @@ class TopicRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         obj = get_object_or_404(Topic, id=self.kwargs[self.lookup_field])
-        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
-            self.check_object_permissions(self.request, obj)
+        self.check_object_permissions(self.request, obj)
         return obj
 
     @swagger_auto_schema(
@@ -225,7 +224,7 @@ class TicketListCreateAPIView(generics.ListCreateAPIView):
 
 class TicketRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
     serializer_class = TicketSerializer
-    permission_classes = [IsAuthenticated, HasChangeTicketPermission]
+    permission_classes = [IsAuthenticated, IsTicketAdminOrCreator, HasChangeTicketPermission]
     http_method_names = ['get', 'patch']
 
     def get_object(self):
@@ -235,6 +234,24 @@ class TicketRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
         instance = self.get_object()
         serializer = self.get_serializer(instance, context={'request': request, 'id': self.kwargs.get('id')})
         return Response(serializer.data)
+
+
+class TicketInternalTransitionUpdateAPIView(generics.UpdateAPIView):
+    serializer_class = TicketInternalTransitionSerializer
+    permission_classes = [IsAuthenticated, HasChangeTicketPermission]
+    http_method_names = ['put']
+
+    def get_object(self):
+        return get_object_or_404(Ticket, id=self.kwargs.get('id'))
+
+
+class TicketExternalTransitionUpdateAPIView(generics.UpdateAPIView):
+    serializer_class = TicketExternalTransitionSerializer
+    permission_classes = [IsAuthenticated, HasChangeTicketPermission]
+    http_method_names = ['put']
+
+    def get_object(self):
+        return get_object_or_404(Ticket, id=self.kwargs.get('id'))
 
 
 class MessageCreateAPIView(generics.CreateAPIView):
