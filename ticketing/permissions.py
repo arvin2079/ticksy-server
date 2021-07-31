@@ -27,6 +27,17 @@ class IsOwner(permissions.BasePermission):
         return request.method in permissions.SAFE_METHODS or request.user == obj.creator
 
 
+class IsTopicOwnerOrSupporter(permissions.BasePermission):
+    message = 'شما سازنده این تاپیک نیستید.'
+    status_code = status.HTTP_403_FORBIDDEN
+
+    def has_permission(self, request, view):
+        topic = get_object_or_404(Topic, id=view.kwargs.get('id'))
+        if request.method in permissions.SAFE_METHODS:
+            return request.user == topic.creator or topic.admins.filter(users__in=[request.user.id]).exists()
+        return request.user == topic.creator
+
+
 class HasAccessToRoll(permissions.BasePermission):
 
     def has_permission(self, request, view):
