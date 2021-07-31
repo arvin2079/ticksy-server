@@ -32,7 +32,7 @@ class IsOwner(permissions.BasePermission):
 
     def has_permission(self, request, view):
         topic = get_object_or_404(Topic, id=view.kwargs['id'], is_active=True)
-        return request.user == topic.creator
+        return request.user == topic.creator or request.method in permissions.SAFE_METHODS
 
 
 class HasAccessToRoll(permissions.BasePermission):
