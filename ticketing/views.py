@@ -6,7 +6,7 @@ from rest_framework import generics, filters, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .permissions import IsIdentified, IsOwner, IsTicketAdminOrCreator, HasChangeTicketPermission, \
-    IsSupporterOrOwnerOrTicketCreator, HasAccessToRoll
+    IsSupporterOrOwnerOrTicketCreator, HasAccessToRoll, IsTopicOwner
 from .swagger import *
 from .filters import TicketFilter
 from drf_yasg.utils import swagger_auto_schema
@@ -131,7 +131,7 @@ class TopicUsersListAPIView(generics.ListAPIView):
 
 class SectionListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = SectionsSerializer
-    permission_classes = [IsAuthenticated, IsOwner]
+    permission_classes = [IsAuthenticated, IsTopicOwner]
     http_method_names = ['get', 'post']
 
     def get_queryset(self):
