@@ -795,7 +795,7 @@ class TestViews(TestCase):
         url = reverse('section-retrieve-update-destroy', args=[ticket.id, section.id])
 
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 403)
 
     def test_SectionRetrieveUpdateDestroyAPIView_patch_200_2(self):
         user = User.objects.get(email='first@test.com')
