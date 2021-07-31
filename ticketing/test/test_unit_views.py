@@ -749,7 +749,7 @@ class TestViews(TestCase):
         url = reverse('ticket-retrieve-update', args=[ticket.id, ])
 
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 403)
 
     def test_TicketRetrieveUpdateAPIView_get_200(self):
         user = User.objects.get(email='second@test.com')
@@ -785,7 +785,7 @@ class TestViews(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 401)
 
-    def test_SectionRetrieveUpdateDestroyAPIView_get_403(self):
+    def test_SectionRetrieveUpdateDestroyAPIView_get_200_1(self):
         user = User.objects.get(email='second@test.com')
         self.client.force_login(user)
 
@@ -795,9 +795,9 @@ class TestViews(TestCase):
         url = reverse('section-retrieve-update-destroy', args=[ticket.id, section.id])
 
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 200)
 
-    def test_SectionRetrieveUpdateDestroyAPIView_patch_200(self):
+    def test_SectionRetrieveUpdateDestroyAPIView_patch_200_2(self):
         user = User.objects.get(email='first@test.com')
         self.client.force_login(user)
 
@@ -906,7 +906,7 @@ class TestViews(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 401)
 
-    def test_TopicRetrieveUpdateDestroyAPIView_get_403(self):
+    def test_TopicRetrieveUpdateDestroyAPIView_get_200_1(self):
         user = User.objects.get(email='second@test.com')
         self.client.force_login(user)
 
@@ -915,9 +915,9 @@ class TestViews(TestCase):
         url = reverse('topic-retrieve-update-destroy', args=[topic.id])
 
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 200)
 
-    def test_TopicRetrieveUpdateDestroyAPIView_patch_200(self):
+    def test_TopicRetrieveUpdateDestroyAPIView_patch_200_2(self):
         user = User.objects.get(email='first@test.com')
         self.client.force_login(user)
 
