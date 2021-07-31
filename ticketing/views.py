@@ -147,7 +147,7 @@ class SectionListCreateAPIView(generics.ListCreateAPIView):
 
 class SectionRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = SectionSerializer
-    permission_classes = [IsAuthenticated, IsOwner]
+    permission_classes = [IsAuthenticated, IsTopicOwnerOrSupporter]
     lookup_field = 'secid'
     http_method_names = ['get', 'put', 'patch', 'delete']
 
