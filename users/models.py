@@ -57,7 +57,7 @@ class User(PermissionsMixin, AbstractBaseUser):
         verbose_name_plural = 'کاربران'
 
     def __str__(self):
-        return self.first_name + " " + self.last_name if self.first_name else self.email[0:self.email.index('@')]
+        return self.first_name + " " + self.last_name if (self.first_name and self.last_name) else self.email
 
 
 REQUESTED = '1'

@@ -70,7 +70,7 @@ class HasChangeTicketPermission(permissions.BasePermission):
 
     def has_permission(self, request, view):
         ticket = get_object_or_404(Ticket, id=view.kwargs['id'])
-        return ticket.admin.users.filter(id=request.user.id).exists() or request.method == "GET"
+        return request.method in permissions.SAFE_METHODS or ticket.admin.users.filter(id=request.user.id).exists()
 
     # def has_object_permission(self, request, view, obj):
     #     return request.user in obj.admin.users.all()

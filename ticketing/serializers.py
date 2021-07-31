@@ -4,7 +4,8 @@ from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
-from ticketing.models import Admin, IN_PROGRESS, Section, TicketHistory, Topic, Ticket, Message, Attachment, ANSWERED, WAITING_FOR_ANSWER
+from ticketing.models import Admin, IN_PROGRESS, Section, TicketHistory, Topic, Ticket, Message, Attachment, ANSWERED, \
+    WAITING_FOR_ANSWER, CLOSED
 from users.serializers import UserSerializerRestricted
 from users.models import User, IDENTIFIED
 from ticketing.exception import BadRequest
@@ -14,40 +15,12 @@ ADMIN = '2'
 
 
 class AdminsFieldSerializer(serializers.ModelSerializer):
+    users = UserSerializerRestricted(read_only=True, many=True)
 
     class Meta:
         model = Admin
-        fields = ['id', 'title']
+        fields = ['id', 'title', 'users']
         read_only_fields = ['id']
-
-
-class TopicsSerializer(serializers.ModelSerializer):
-    role = serializers.SerializerMethodField()
-    creator = UserSerializerRestricted(read_only=True)
-    admins = AdminsFieldSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Topic
-        fields = ['id', 'creator', 'role', 'title', 'description', 'admins', 'url', 'avatar']
-        read_only_fields = ['id', 'creator', 'role', 'admins', 'url']
-        extra_kwargs = {
-            'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'id'}
-        }
-
-    def get_role(self, obj):
-        if self.context['request'].user == obj.creator:
-            return CREATOR
-        return ADMIN
-
-    def create(self, validated_data):
-        validated_data['creator'] = self.context['request'].user
-        instance = super().create(validated_data)
-        return instance
-
-
-class TopicSerializer(TopicsSerializer):
-    class Meta(TopicsSerializer.Meta):
-        lookup_field = 'id'
 
 
 class TopicAdminsSerializer(AdminsFieldSerializer):
@@ -89,8 +62,6 @@ class TopicUsersListSerializers(serializers.ModelSerializer):
         return topic_creator == obj
 
 
-
-
 class SectionsSerializer(serializers.ModelSerializer):
 
     get_last_ticket_date = serializers.DateTimeField(read_only=True)
@@ -112,6 +83,36 @@ class SectionsSerializer(serializers.ModelSerializer):
         instance = super().create(validated_data)
         instance.save()
         return instance
+
+
+class TopicsSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField()
+    creator = UserSerializerRestricted(read_only=True)
+    admins = AdminsFieldSerializer(many=True, read_only=True)
+    section_set = SectionsSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Topic
+        fields = ['id', 'creator', 'role', 'title', 'description', 'admins', 'url', 'avatar', 'section_set']
+        read_only_fields = ['id', 'creator', 'role', 'admins', 'url']
+        extra_kwargs = {
+            'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'id'}
+        }
+
+    def get_role(self, obj):
+        if self.context['request'].user == obj.creator:
+            return CREATOR
+        return ADMIN
+
+    def create(self, validated_data):
+        validated_data['creator'] = self.context['request'].user
+        instance = super().create(validated_data)
+        return instance
+
+
+class TopicSerializer(TopicsSerializer):
+    class Meta(TopicsSerializer.Meta):
+        lookup_field = 'id'
 
 
 class TopicAllDetailSerializer(TopicsSerializer):
@@ -191,7 +192,7 @@ class MessageSerializer(serializers.ModelSerializer):
         validated_data['user'] = user
         validated_data['ticket'] = get_object_or_404(Ticket, id=self.context.get('id'))
         instance = super().create(validated_data)
-        if self.context.get('request').user in instance.ticket.admin.users.all():
+        if self.context.get('request').user in instance.ticket.admin.users.all() and instance.ticket.status != CLOSED:
             instance.ticket.status = ANSWERED
         elif self.context.get('request').user == instance.ticket.creator:
             instance.ticket.status = WAITING_FOR_ANSWER
@@ -216,11 +217,9 @@ class TicketSerializer(TicketsSerializer):
     message_set = MessageSerializer(many=True, read_only=True)
     tickethistory_set = TicketHistorySerializer(many=True, read_only=True)
     admin_detail = AdminsFieldSerializer(read_only=True, source='admin')
-    admin = serializers.PrimaryKeyRelatedField(queryset=Admin.objects.all(), write_only=True)  # todo: need to validate
-    section = serializers.PrimaryKeyRelatedField(queryset=Section.objects.filter(is_active=True), write_only=True)
 
     class Meta(TicketsSerializer.Meta):
-        fields = ['id', 'title', 'status', 'priority', 'section', 'admin', 'tags', 'message_set', 'tickethistory_set',
+        fields = ['id', 'creator', 'title', 'status', 'priority', 'tags', 'message_set', 'tickethistory_set',
                   'last_update', 'creation_date', 'section_detail', 'admin_detail', 'other_sections']
 
     @extend_schema_field(SectionSerializer(many=True))
@@ -229,18 +228,45 @@ class TicketSerializer(TicketsSerializer):
         ser = SectionSerializer(instance=other_sections, many=True)
         return ser.data
 
+
+class TicketInternalTransitionSerializer(TicketSerializer):
+
+    admin = serializers.PrimaryKeyRelatedField(queryset=Admin.objects.all(), write_only=True)  # todo: need to validate
+
+    class Meta(TicketsSerializer.Meta):
+        fields = ['id', 'creator', 'title', 'status', 'priority', 'admin', 'tags', 'message_set', 'tickethistory_set',
+                  'last_update', 'creation_date', 'section_detail', 'admin_detail', 'other_sections']
+        read_only_fields = ['id', 'creator', 'title', 'status', 'priority', 'tags', 'message_set', 'tickethistory_set',
+                            'last_update', 'creation_date', 'section_detail', 'admin_detail', 'other_sections']
+
+    def validate_admin(self, value):
+        if not self.instance.section.topic.admins.filter(id=value.id).exists():
+            raise serializers.ValidationError('نقش باید متعلق به بخش مربوطه باشد')
+        return value
+
     def update(self, instance, validated_data):
-        if validated_data['admin'] not in validated_data['section'].topic.admins.all():
-            raise BadRequest(detail={'message': 'نقش انتخاب شده برای رسیدگی به این تیکت، داخل بخش ارسال شده وجود ندارد'})
-        TicketHistory.objects.create(ticket=instance, admin=instance.admin, section=instance.section, operator=self.context.get('request').user)
-        instance.title = validated_data['title']
-        instance.status = validated_data['status']
-        instance.priority = validated_data['priority']
-        instance.section = validated_data['section']
-        instance.admin = validated_data['admin']
-        instance.tags = validated_data['tags']
-        instance.save()
-        return super().create(validated_data)
+        TicketHistory.objects.create(ticket=instance, admin=instance.admin, section=instance.section,
+                                     operator=self.context.get('request').user)
+        validated_data['status'] = WAITING_FOR_ANSWER
+        return super().update(instance, validated_data)
+
+
+class TicketExternalTransitionSerializer(TicketSerializer):
+
+    section = serializers.PrimaryKeyRelatedField(queryset=Section.objects.filter(is_active=True), write_only=True)
+
+    class Meta(TicketsSerializer.Meta):
+        fields = ['id', 'title', 'status', 'priority', 'section', 'tags', 'message_set', 'tickethistory_set',
+                  'last_update', 'creation_date', 'section_detail', 'admin_detail', 'other_sections', ]
+        read_only_fields = ['id', 'title', 'status', 'priority', 'tags', 'message_set', 'tickethistory_set',
+                            'last_update', 'creation_date', 'section_detail', 'admin_detail', 'other_sections']
+
+    def update(self, instance, validated_data):
+        TicketHistory.objects.create(ticket=instance, admin=instance.admin, section=instance.section,
+                                     operator=self.context.get('request').user)
+        validated_data['admin'] = validated_data['section'].admin
+        validated_data['status'] = WAITING_FOR_ANSWER
+        return super().update(instance, validated_data)
 
 
 class MessageUpdateSerializer(serializers.ModelSerializer):
