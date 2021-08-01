@@ -125,10 +125,11 @@ class TopicAllDetailSerializer(TopicsSerializer):
 class SectionSerializer(serializers.ModelSerializer):
     admin = serializers.PrimaryKeyRelatedField(queryset=Admin.objects.all(), write_only=True)
     admin_detail = TopicAdminsSerializer(read_only=True, source='admin')
+    topic = TopicsSerializer(read_only=True)
 
     class Meta:
         model = Section
-        fields = ['id', 'title', 'description', 'admin', 'admin_detail', 'avatar']
+        fields = ['id', 'title', 'description', 'admin', 'admin_detail', 'avatar', 'topic']
 
     def validate_admin(self, value):
         if value in Admin.objects.filter(Q(topic__id=self.context['id'])):
