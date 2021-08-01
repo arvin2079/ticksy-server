@@ -86,23 +86,23 @@ class SectionsSerializer(serializers.ModelSerializer):
 
 
 class TopicsSerializer(serializers.ModelSerializer):
-    role = serializers.SerializerMethodField()
+    # role = serializers.SerializerMethodField()
     creator = UserSerializerRestricted(read_only=True)
     admins = AdminsFieldSerializer(many=True, read_only=True)
     section_set = SectionsSerializer(many=True, read_only=True)
 
     class Meta:
         model = Topic
-        fields = ['id', 'creator', 'role', 'title', 'description', 'admins', 'url', 'avatar', 'section_set']
-        read_only_fields = ['id', 'creator', 'role', 'admins', 'url']
+        fields = ['id', 'creator', 'title', 'description', 'admins', 'avatar', 'section_set']
+        read_only_fields = ['id', 'creator', 'admins']
         extra_kwargs = {
             'url': {'view_name': 'topic-retrieve-update-destroy', 'lookup_field': 'id'}
         }
 
-    def get_role(self, obj):
-        if self.context['request'].user == obj.creator:
-            return CREATOR
-        return ADMIN
+    # def get_role(self, obj):
+    #     if self.context['request'].user == obj.creator:
+    #         return CREATOR
+    #     return ADMIN
 
     def create(self, validated_data):
         validated_data['creator'] = self.context['request'].user
@@ -119,7 +119,7 @@ class TopicAllDetailSerializer(TopicsSerializer):
     section_set = SectionsSerializer(many=True)
 
     class Meta(TopicsSerializer.Meta):
-        fields = ['id', 'creator', 'role', 'title', 'description', 'section_set', 'admins', 'url', 'avatar']
+        fields = ['id', 'creator', 'title', 'description', 'section_set', 'admins', 'url', 'avatar']
 
 
 class SectionSerializer(serializers.ModelSerializer):
