@@ -38,7 +38,7 @@ pycparser==2.20
 pyparsing==2.4.7
 pyrsistent==0.18.0
 pytz==2020.4
-pywin32==301
+
 PyYAML==5.4.1
 pyzmq==22.1.0
 requests==2.25.0
