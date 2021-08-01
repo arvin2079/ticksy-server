@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 from django.urls import reverse
-from users.models import User
+from users.models import User, IDENTIFIED
 
 
 class TestViews(TestCase):
@@ -8,7 +8,7 @@ class TestViews(TestCase):
     def setUp(self):
         self.client = Client()
         User.objects.create_user(
-            email='a@a.com',
+            email='exmaple@example.com',
             password='12345678',
         )
 
@@ -30,7 +30,7 @@ class TestViews(TestCase):
     def test_SigninApiView_200(self):
         url = reverse('users:user_signin')
         response = self.client.post(url, {
-            "username": "a@a.com",
+            "username": "exmaple@example.com",
             "password": "12345678"
         })
         self.assertEqual(response.status_code, 200)
@@ -61,21 +61,59 @@ class TestViews(TestCase):
         response = self.client.post(url, body)
         self.assertEqual(response.status_code, 400)
 
-    # def test_SignupApiView(self):
-    #     url = reverse('users:user_signup')
-    #     response = self.client.post(url, {
-    #         "email": "u@example.com",
-    #         "password": "12345678",
-    #         "first_name": "علیرضا",
-    #         "last_name": "بیگی"
-    #     })
-    #     self.assertEqual(response.status_code, 201)
-    #
-    # def test_ResetPasswordRequest(self):
-    #     pass
-    #
-    # def test_ResetPasswordValidateToken(self):
-    #     pass
-    #
-    # def test_ResetPasswordNewPassword(self):
-    #     pass
+    def test_SignupApiView_201(self):
+        url = reverse('users:user_signup')
+        response = self.client.post(url, {
+            "email": "us@example.com",
+            "password": "12345678",
+            "first_name": "علیرضا",
+            "last_name": "بیگی"
+        })
+        self.assertEqual(response.status_code, 201)
+
+    def test_SignupApiView_400(self):
+        url = reverse('users:user_signup')
+        response = self.client.post(url, {
+            "email": "a@a.com",
+            "password": "12345678",
+            "first_name": "علیرضا",
+            "last_name": "بیگی"
+        })
+        self.assertEqual(response.status_code, 400)
+
+    def test_ResetPasswordRequest_200(self):
+        url = reverse('users:reset_password_request')
+        response = self.client.post(url, {
+            "email": "exmaple@example.com",
+        })
+        self.assertEqual(response.status_code, 200)
+
+    def test_ResetPasswordRequest_400(self):
+        url = reverse('users:reset_password_request')
+        response = self.client.post(url, {
+            "email": "false@example.com",
+        })
+        self.assertEqual(response.status_code, 400)
+
+    def test_IdentityApiView_200_1(self):
+        user = User.objects.first()
+        self.client.force_login(user=user)
+
+        url = reverse('users:user_identity')
+        response = self.client.patch(url, {}, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+
+    def test_IdentityApiView_401(self):
+        url = reverse('users:user_identity')
+        response = self.client.patch(url, {}, content_type='application/json')
+        self.assertEqual(response.status_code, 401)
+
+    def test_IdentityApiView_200_2(self):
+        user = User.objects.first()
+        self.client.force_login(user=user)
+        user.identity.status = IDENTIFIED
+        user.save()
+
+        url = reverse('users:user_identity')
+        response = self.client.patch(url, {}, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
