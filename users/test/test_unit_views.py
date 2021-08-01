@@ -21,7 +21,7 @@ class TestViews(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
-    def test_UserInfoApiView_200(self):
+    def test_UserInfoApiView_401(self):
         url = reverse('users:user_info')
         response = self.client.get(url)
 
@@ -35,7 +35,7 @@ class TestViews(TestCase):
         })
         self.assertEqual(response.status_code, 200)
 
-    def test_SigninApiView_400(self):
+    def test_SigninApiView_400_1(self):
         url = reverse('users:user_signin')
         body = {
             "username": "aa.com",
@@ -47,6 +47,16 @@ class TestViews(TestCase):
 
         body['username'] = 'a@a.com'
         body['password'] = '123'
+
+        response = self.client.post(url, body)
+        self.assertEqual(response.status_code, 400)
+
+    def test_SigninApiView_400_2(self):
+        url = reverse('users:user_signin')
+        body = {
+            "username": "a@a.com",
+            "password": "123"
+        }
 
         response = self.client.post(url, body)
         self.assertEqual(response.status_code, 400)

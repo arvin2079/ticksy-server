@@ -68,6 +68,45 @@ class TestValidators(TestCase):
         sample_quote = 'کگوئدذرزطظژؤآإأءًٌٍَُِّ۱۲۳۴۵۶۷۸۹۰'
         self.assertTrue(is_persian(sample_quote))
 
+    def test_lastname_leading_invalid_char(self):
+        sample_quote = 's' + 'مثال'
+        self.assertFalse(validate_lastname(sample_quote))
+
+    def test_lastname_trailing_invalid_char(self):
+        sample_quote = 'مثال' + 's'
+        self.assertFalse(validate_lastname(sample_quote))
+
+    def test_lastname_within_invalid_char(self):
+        sample_quote = 'مثال' + 'k' + 'مثال'
+        self.assertFalse(validate_lastname(sample_quote))
+
+    def test_lastname_all_invalid_char(self):
+        sample_quote = 'example'
+        self.assertFalse(validate_lastname(sample_quote))
+
+    def test_lastname_all_valid(self):
+        sample_quote = 'کگوئدذرزطظژؤآإأءًٌٍَُِّ۱۲۳۴۵۶۷۸۹۰'
+        self.assertTrue(validate_lastname(sample_quote))
+
+    def test_firstname_leading_invalid_char(self):
+        sample_quote = 's' + 'مثال'
+        self.assertFalse(validate_firstname(sample_quote))
+
+    def test_firstname_trailing_invalid_char(self):
+        sample_quote = 'مثال' + 's'
+        self.assertFalse(validate_firstname(sample_quote))
+
+    def test_firstname_within_invalid_char(self):
+        sample_quote = 'مثال' + 'k' + 'مثال'
+        self.assertFalse(validate_firstname(sample_quote))
+
+    def test_firstname_all_invalid_char(self):
+        sample_quote = 'example'
+        self.assertFalse(validate_firstname(sample_quote))
+
+    def test_firstname_all_valid(self):
+        sample_quote = 'کگوئدذرزطظژؤآإأءًٌٍَُِّ۱۲۳۴۵۶۷۸۹۰'
+        self.assertTrue(validate_firstname(sample_quote))
 
     def test_is_english_leading_invalid_char(self):
         sample_quote = 'exmaple' + 'مثال'
@@ -89,5 +128,10 @@ class TestValidators(TestCase):
         sample_quote = 'sdkflkjlk lsdk s'
         self.assertTrue(is_english(sample_quote))
 
+    def test_identifier_image(self):
+        sample_image = 'media/sampleimage.jpg'
+        self.assertTrue(validate_identifier_image(sample_image))
 
-
+    def test_identifier_code(self):
+        sample_code = '972023020'
+        self.assertTrue(validate_identifier_code(sample_code))
