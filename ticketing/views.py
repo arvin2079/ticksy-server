@@ -89,14 +89,13 @@ class TopicAdminsListCreateAPIView(generics.ListCreateAPIView):
 
 class AdminRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TopicAdminsSerializer
-    permission_classes = [IsAuthenticated, IsOwner]
+    permission_classes = [IsAuthenticated, IsTopicOwnerOrSupporter]
     lookup_field = 'roleid'
     http_method_names = ['get', 'put', 'patch', 'delete']
 
     def get_object(self):
         obj = get_object_or_404(Admin, id=self.kwargs['roleid'], topic__id=self.kwargs['id'], topic__is_active=True)
-        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
-            self.check_object_permissions(self.request, obj)
+        self.check_object_permissions(self.request, obj)
         return obj
 
     def update(self, request, *args, **kwargs):
